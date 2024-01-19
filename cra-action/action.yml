@@ -1,0 +1,17 @@
+# action.yml
+name: 'Docker Run Action'
+description: 'Run a command in a new container'
+inputs:
+  options:
+    description: 'additional parameters to run the Code Review Agent'
+    required: true
+  pr:
+    description: 'PR URL which needs to be reviewed'
+    required: true
+  command:
+    description: 'Use a specific command'
+    required: true
+    default: review
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
