@@ -1,0 +1,30 @@
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, review_requested]
+  issue_comment:
+    types: [created]
+jobs:
+  code_review_job:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: write
+    name: Run code review agent on every pull request, respond to user comments
+    steps:
+      - name: Code Review Agent - Issue Comment
+        id: cra_issues_comment
+        if: ${{ github.event_name == 'issue_comment' }}
+        uses: gitbito/codereviewagent@main
+        with:
+          pr: ${{ github.event.issue.pull_request.html_url }}
+          command: ${{ github.event.comment.body }}
+          options: --static_analysis.fb_infer.enabled=True --code_feedback=True --dependency_check.enabled=False --bee.path=/automation-platform  --bee.actn_dir=/automation-platform/default_bito_ad/bito_modules --git.access_token=${{ secrets.GIT_ACCESS_TOKEN }} --bito_cli.bito.access_key=${{ secrets.BITO_ACCESS_KEY }}
+      - name: Code Review Agent action step
+        id: cra
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: gitbito/codereviewagent@main
+        with:
+          pr: ${{ github.event.pull_request.html_url }}
+          command: review
+          options: --static_analysis.fb_infer.enabled=True --code_feedback=True --dependency_check.enabled=False --bee.path=/automation-platform  --bee.actn_dir=/automation-platform/default_bito_ad/bito_modules --git.access_token=${{ secrets.GIT_ACCESS_TOKEN }} --bito_cli.bito.access_key=${{ secrets.BITO_ACCESS_KEY }}
