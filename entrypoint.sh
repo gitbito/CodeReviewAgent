@@ -6,9 +6,10 @@ echo $INPUT_PR
 echo $INPUT_COMMAND
 echo $INPUT_OPTIONS
 
-SUPPORTED_COMMANDS=("/review")
+SUPPORTED_COMMANDS=("review")
 
 INPUT_COMMAND=$(echo "$INPUT_COMMAND" | tr -d '[:space:]')
+INPUT_COMMAND=$(echo "$INPUT_COMMAND" | sed 's|^/||')
 for command in "${SUPPORTED_COMMANDS[@]}"; do
   if [ "$command" = "$INPUT_COMMAND" ]; then
     valid_command=true
