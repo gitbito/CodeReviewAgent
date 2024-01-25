@@ -6,7 +6,7 @@ echo $INPUT_PR
 echo $INPUT_COMMAND
 echo $INPUT_OPTIONS
 
-SUPPORTED_COMMANDS=("/review", "review")
+SUPPORTED_COMMANDS=("/review" "review")
 
 INPUT_COMMAND=$(echo "$INPUT_COMMAND" | tr -d '[:space:]')
 for command in "${SUPPORTED_COMMANDS[@]}"; do
