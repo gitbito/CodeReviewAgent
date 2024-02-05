@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 #set -x
 
+# Variables for temp files.
+BITOAIDIR="$HOME/.bitoai"
+mkdir -p $BITOAIDIR
+BITOCRALOCKFILE=$BITOAIDIR/bitocra.lock
+BITOCRACID=$BITOAIDIR/bitocra.cid
+
 validate_bash_version() {
     # Get the Bash version
     bash_version=$(bash --version | head -n 1 | awk '{print $4}')
@@ -38,12 +44,12 @@ validate_url() {
   fi
 }
 
-# Function to validate a git provider value i.e. either GITLAB or GITHUB
+# Function to validate a git provider value i.e. either GITLAB or GITHUB 
 validate_git_provider() {
-  local git_provider_val="$1"
+  local git_provider_val=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+
   if [ "$git_provider_val" == "GITLAB" ] || [ "$git_provider_val" == "GITHUB" ]; then
-    #echo "Valid git provider value"
-    echo
+    echo $git_provider_val
   else
     echo "Invalid git provider value. Please enter either GITLAB or GITHUB."
     exit 1
@@ -52,10 +58,11 @@ validate_git_provider() {
 
 # Function to validate a boolean value i.e. string compare against "True" or "False"
 validate_boolean() {
-  local boolean_val="$1"
-  if [ "$boolean_val" == "True" ] || [ "$boolean_val" == "False" ]; then
-    #echo "Valid boolean value"
-    echo
+  local boolean_val="$(echo "$1" | awk '{print tolower($0)}')"
+  if [ "$boolean_val" == "true" ]; then
+    echo "True"
+  elif [ "$boolean_val" == "false" ]; then
+    echo "False"
   else
     echo "Invalid boolean value. Please enter either True or False."
     exit 1
@@ -74,38 +81,212 @@ validate_mode() {
   fi    
 }
 
+# Function to display URL using IP address and port
+# Run docker ps -l command and store the output
+display_docker_url() {
+  container_info=$(docker ps -l | tail -n +2)
+
+  # Extract IP address and port number using awk
+  ip_address=$(echo "$container_info" | awk 'NR>0 {print $(NF-1)}' | cut -d':' -f1)
+  #container_id=$(echo "$container_info" | awk 'NR>0 {print $1}')
+  #ip_address=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$container_id")
+  #if [[ $(uname) == "Darwin" ]]; then
+  #  ip_address=$(ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}')
+  #else
+  #  ip_address=$(ip route get 1 | awk '{print $NF;exit}')
+  #fi
+  if [ "$ip_address" == "0.0.0.0" ]; then
+    ip_address="127.0.0.1" 
+  fi
+  port_number=$(echo "$container_info" | awk 'NR>0 {print $(NF-1)}' | cut -d'-' -f1 | cut -d':' -f2)
+
+  # Print the IP address and port number
+  #echo "IP Address: $ip_address"
+  #echo "Port Number: $port_number"
+
+  if [ -n "$ip_address" ] && [ -n "$port_number" ]; then
+    # Construct the URL
+    url="http://${ip_address}:${port_number}/"
+
+    # Print the URL
+    echo ""
+    echo "Code Review Agent URL: $url"
+    echo "Note: Use above URL to configure GITLAB/GITHUB webhook by replacing IP adderss with the IP address or Domain Name of your server."
+  fi
+}
+
+display_usage() {
+  echo "Invalid command to execute Code Review Agent:"
+  echo
+  echo "Usage-1: $0 <path-to-properties-file>"
+  echo "Usage-2: $0 service start | restart <path-to-properties-file>"
+  echo "Usage-3: $0 service stop"
+  echo "Usage-4: $0 service status"
+}
+
+check_properties_file() {
+  local prop_file="$1"
+  if [ -z "$prop_file" ]; then
+    echo "Properties file not provided!"
+    return 1
+  fi
+  if [ ! -f "$prop_file" ]; then
+    echo "Properties file not found!"
+    return 1
+  else
+    echo $prop_file
+    return 0
+  fi
+}
+
+check_action_directory() {
+  local action_dir="$1"
+  if [ -z "$action_dir" ]; then
+    echo "Action directory not provided!"
+    return 1
+  fi
+  if [ ! -d "$action_dir" ]; then
+    echo "Action directory not found!"
+    return 1
+  else
+    echo $action_dir
+    return 0
+  fi
+}
+
+stop_cra() {
+  if test -f "$BITOCRALOCKFILE"; then
+    echo "Stopping the CRA..."
+    source "$BITOCRALOCKFILE"
+    docker stop "$CONTAINER_ID"
+    RET_VAL=`echo $?`
+    if [ $RET_VAL -ne 0 ]; then
+      echo "Could not stop CRA"
+      exit 1
+    fi
+    rm -rf "$BITOCRALOCKFILE"
+  else
+    echo "CRA is not running."
+  fi
+}
+
+check_cra() {
+  if test -f "$BITOCRALOCKFILE"; then
+    echo "CRA is running."
+  else
+    echo "CRA is not running."
+  fi
+}
+
 # Check if a properties file is provided as an argument
 if [ "$#" -lt 1 ]; then
-  echo "Usage: $0 <path-to-properties-file>"
+  display_usage
   exit 1
 fi
 
-# Load properties from file
-properties_file=$1
-if [ ! -f "$properties_file" ]; then
+properties_file=
+action_directory=
+force_mode=
+if [ "$#" -gt 1 ]; then
+  if [ "$1" == "service" ]; then
+    case "$2" in
+      start)
+        force_mode="server"
+        properties_file=$(check_properties_file "$3")
+        if [ $? -ne 0 ]; then
+          echo "Properties file not found!"
+          exit 1
+        fi
+        if test -f "$BITOCRALOCKFILE"; then
+          echo "CRA is already running."
+          exit 0
+        fi
+
+        echo "Starting the CRA..."
+
+        # Note down the hidden parameter for action directory
+        if [ "$#" -eq 4 ]; then
+          action_directory=$(check_action_directory "$4")
+          if [ $? -ne 0 ]; then
+            echo "Action directory not found!"
+            exit 1
+          fi
+          #echo "Action Diretory: $action_directory"
+        fi
+        ;;
+      stop)
+        stop_cra
+        exit 0
+        ;;
+      restart)
+        force_mode="server"
+        properties_file=$(check_properties_file "$3")
+        if [ $? -ne 0 ]; then
+          echo "Properties file not found!"
+          exit 1
+        fi
+
+        stop_cra
+        echo "Starting the CRA..."
+
+        # Note down the hidden parameter for action directory
+        if [ "$#" -eq 4 ]; then
+          action_directory=$(check_action_directory "$4")
+          if [ $? -ne 0 ]; then
+            echo "Action directory not found!"
+            exit 1
+          fi
+          #echo "Action Diretory: $action_directory"
+        fi
+        ;;
+      status)
+        echo "Checking the CRA..."
+        check_cra
+        exit 0
+        ;;
+      *)
+        display_usage
+        exit 1
+        ;;
+    esac
+  else
+    # Load properties from file
+    properties_file=$(check_properties_file "$1")
+    if [ $? -ne 0 ]; then
+      echo "Properties file not found!"
+      exit 1
+    fi
+
+    # Note down the hidden parameter for action directory
+    if [ "$#" -eq 2 ]; then
+      action_directory=$(check_action_directory "$2")
+      if [ $? -ne 0 ]; then
+        echo "Action directory not found!"
+        exit 1
+      fi
+      #echo "Action Diretory: $action_directory"
+    fi
+  fi
+else
+  # Load properties from file
+  properties_file=$(check_properties_file "$1")
+  if [ $? -ne 0 ]; then
     echo "Properties file not found!"
     exit 1
+  fi
 fi
 
 #validate the bash versions and docker version
 validate_bash_version
 validate_docker_version
 
-# Note down the hidden parameter for action directory
-action_directory=
-if [ "$#" -eq 2 ]; then
-    action_directory=$2
-    if [ ! -d "$action_directory" ]; then
-        echo "Action directory not found!"
-        exit 1
-    fi
-fi
-#echo "Action Diretory: $action_directory"
-
 # Read properties into an associative array
 declare -A props
 while IFS='=' read -r key value; do
-  props["$key"]="$value"
+    # Skip lines starting with #
+    if [[ "$key" != \#* ]]; then
+        props["$key"]="$value"
+    fi
 done < "$properties_file"
 
 # Function to ask for missing parameters
@@ -187,6 +368,10 @@ required_params=("${required_params_cli[@]}")
 optional_params=("${optional_params_cli[@]}")
 mode="cli"
 param_mode="mode"
+#handle if CRA is starting in server mode using start command.
+if [ -n "$force_mode" ]; then
+  props[$param_mode]="$force_mode"
+fi
 validate_mode "${props[$param_mode]}"
 if [ "${props[$param_mode]}" == "server" ]; then
     mode="server"
@@ -237,16 +422,20 @@ for param in "${required_params[@]}" "${bee_params[@]}" "${optional_params[@]}";
         docker_cmd+=" --$param=${props[$param]} review" 
     elif [ "$param" == "git.provider" ]; then
         #validate the URL
-        validate_git_provider "${props[$param]}"
+        props[$param]=$(validate_git_provider "${props[$param]}")
         docker_cmd+=" --$param=${props[$param]}" 
     elif [ "$param" == "static_analysis" ]; then
         #handle special case of static_analysis.fb_infer.enabled using static_analysis
-        validate_boolean "${props[$param]}"
+        props[$param]=$(validate_boolean "${props[$param]}")
         docker_cmd+=" --static_analysis.fb_infer.enabled=${props[$param]}"
     elif [ "$param" == "dependency_check" ]; then
         #validate the dependency check boolean value
-        validate_boolean "${props[$param]}"
+        props[$param]=$(validate_boolean "${props[$param]}")
         docker_cmd+=" --dependency_check.enabled=${props[$param]}" 
+    elif [ "$param" == "code_feedback" ]; then
+        #validate the code feedback boolean value
+        props[$param]=$(validate_boolean "${props[$param]}")
+        docker_cmd+=" --$param=${props[$param]}"
     elif [ "$param" == "mode" ]; then
         validate_mode "${props[$param]}"
         docker_cmd+=" --$param=${props[$param]}" 
@@ -267,6 +456,8 @@ if [ "$mode" == "server" ]; then
         echo "$git_secret"
         echo
     fi
+
+    docker_cmd+=" > \"$BITOCRACID\""
 fi
 
 # Execute the docker command
@@ -274,7 +465,14 @@ echo "Running command: $(eval echo $docker_pull)"
 eval "$docker_pull"
 
 if [ "$?" == 0 ]; then
-	echo "Running command: $(eval echo $docker_cmd)"
+	echo "Running command: $docker_cmd"
 	eval "$docker_cmd"
+
+        if [ "$?" == 0 ] && [ "$mode" == "server" ]; then
+            display_docker_url
+            printf "export CONTAINER_ID=" > "$BITOCRALOCKFILE"
+            cat "$BITOCRACID" >> "$BITOCRALOCKFILE"
+            rm -rf "$BITOCRACID"
+        fi
 fi
 
