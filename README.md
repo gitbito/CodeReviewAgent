@@ -9,19 +9,21 @@ The upcoming Bito's **Native Code RAG** feature will enable the AI Code Review A
 
 AI Code Review Agent ensures a secure and confidential experience without compromising on reliability. Bito neither reads nor stores your code, and none of your code is used for AI model training. Learn more about our **[Privacy & Security practices](https://docs.bito.ai/privacy-and-security)**.
 
-**[View Documentation](https://docs.bito.ai/bito-ai-agents/ai-code-review-agent)**
+**[View Documentation](https://docs.bito.ai/bito-dev-agents/ai-code-review-agent)**
 
 ## Watch Video on YouTube
-[![Bito's AI Code Review Agent](https://img.youtube.com/vi/8j6m0UW8LIw/0.jpg)](https://www.youtube.com/watch?v=8j6m0UW8LIw)
+Right-click the image below and select "Open link in new tab" to view the **[YouTube video](https://youtu.be/QzMFfl2KRJI)** on a new page.
+
+[![Bito's AI Code Review Agent](https://img.youtube.com/vi/QzMFfl2KRJI/0.jpg)](https://www.youtube.com/watch?v=QzMFfl2KRJI)
 
 ## Getting Started
 There are two ways to use the AI Code Review Agent.
 
 **1- Bito Cloud:** Offers a hassle-free experience with no installation required on your machine.
-[Follow this guide](https://docs.bito.ai/bito-ai-agents/ai-code-review-agent)
+[Follow this guide](https://docs.bito.ai/bito-dev-agents/ai-code-review-agent/getting-started/install-run-using-bito-cloud)
 
-**2- Docker Image:** Ideal for on-premise setups.
-[Follow this guide](https://docs.bito.ai/bito-ai-agents/ai-code-review-agent/install-run-as-a-self-hosted-service-via-webhooks)
+**2- Self-hosted service via CLI, webhooks, or GitHub Actions:** Ideal for deployments within your own infrastructure.
+[Follow this guide](https://docs.bito.ai/bito-dev-agents/ai-code-review-agent/getting-started/install-run-as-a-self-hosted-service)
 
 ## Why Use AI for Code Review?
 - **Time Saving**: Can reduce code review time by up to 50%.
@@ -75,6 +77,6 @@ There are two ways to use the AI Code Review Agent.
 ---
 
 ## Need Support? We're Ready to Assist!
-For comprehensive information and guidance on the AI Code Review Agent, including installation and configuration instructions, please refer to our detailed documentation available **[here](https://docs.bito.ai/bito-ai-agents/ai-code-review-agent)**. Should you require further assistance or have any inquiries, our support team is readily available to assist you.
+For comprehensive information and guidance on the AI Code Review Agent, including installation and configuration instructions, please refer to our detailed **[documentation available here](https://docs.bito.ai/bito-dev-agents/ai-code-review-agent)**. Should you require further assistance or have any inquiries, our support team is readily available to assist you.
 
 Feel free to reach out to us via email at: **[support@bito.ai](mailto:support@bito.ai)**
