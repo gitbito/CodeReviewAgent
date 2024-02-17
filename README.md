@@ -72,7 +72,8 @@ There are two ways to use the AI Code Review Agent.
 ### Screenshot # 5
 > *The Agent checks real-time for the latest high severity security vulnerabilities in your code, using OWASP Dependency-Check (available out of the box). Additional tools such as Snyk, or GitHub Dependabot can also be configured.*
 
-![AI Code Review Agent's output screenshot](https://github.com/gitbito/codereviewagent/assets/22556762/fca4a038-2281-41bf-b0eb-3c43136a68a5)
+![AI Code Review Agent's output screenshot](https://github.com/gitbito/CodeReviewAgent/assets/22556762/7b2fa28d-c0c8-44cd-b0ad-11aa18513d2a)
+
 
 ---
 
