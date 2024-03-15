@@ -81,6 +81,18 @@ validate_mode() {
   fi    
 }
 
+# Function to validate a env value i.e. prod or staging
+validate_env() {
+  local env="$1"
+  if [ "$env" == "prod" ] || [ "$env" == "staging" ]; then
+    #echo "Valid mode value"
+    echo
+  else
+    echo "Invalid mode value. Please enter either prod or staging."
+    exit 1
+  fi
+}
+
 # Function to display URL using IP address and port
 # Run docker ps -l command and store the output
 display_docker_url() {
@@ -150,6 +162,32 @@ check_action_directory() {
     return 1
   else
     echo $action_dir
+    return 0
+  fi
+}
+
+check_cli_directory() {
+  local cli_dir="$1"
+  if [ -z "$cli_dir" ]; then
+    echo "cli directory not provided!"
+    return 1
+  fi
+  if [ ! -d "$cli_dir" ]; then
+    echo "cli directory not found!"
+    return 1
+  else
+    echo $cli_dir
+    return 0
+  fi
+}
+
+check_output_directory() {
+  local output_path="$1"
+  if [ ! -d "$output_path" ]; then
+    echo "output path directory not found!"
+    return 1
+  else
+    echo $output_path
     return 0
   fi
 }
@@ -321,6 +359,10 @@ optional_params_cli=(
   "dependency_check"
   "dependency_check.snyk_auth_token"
   "cra_version"
+  "env"
+  "cli_path"
+  "output_path"
+  "git.domain"
 )
 
 # Parameters that are required/optional in mode server
@@ -338,6 +380,9 @@ optional_params_server=(
   "dependency_check.snyk_auth_token"
   "server_port"
   "cra_version"
+  "env"
+  "cli_path"
+  "git.domain"
 )
 
 bee_params=(
@@ -359,15 +404,16 @@ cra_version="latest"
 docker_pull='docker pull bitoai/cra:${cra_version}'
 
 # Construct the docker run command
-docker_cmd='docker run --rm -it'
+docker_init_cmd='docker run --rm -it'
 if [ ! -z "$action_directory" ]; then
-    docker_cmd='docker run --rm -it -v $action_directory:/action_dir'
+    docker_init_cmd='docker run --rm -it -v $action_directory:/action_dir'
 fi
 
 required_params=("${required_params_cli[@]}")
 optional_params=("${optional_params_cli[@]}")
 mode="cli"
 param_mode="mode"
+docker_cmd=""
 #handle if CRA is starting in server mode using start command.
 if [ -n "$force_mode" ]; then
   props[$param_mode]="$force_mode"
@@ -398,7 +444,7 @@ done
 for param in "${optional_params[@]}"; do
   if [ "$param" == "dependency_check.snyk_auth_token" ] && [ "${props["dependency_check"]}" == "True" ]; then
       ask_for_param "$param" "False"
-  elif [ "$param" != "dependency_check.snyk_auth_token" ]; then
+  elif [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "git.domain" ]; then
       ask_for_param "$param" "False"
   fi
 done
@@ -418,8 +464,9 @@ for param in "${required_params[@]}" "${bee_params[@]}" "${optional_params[@]}";
         docker_cmd+=" --$param=${props[$param]}"
     elif [ "$param" == "pr_url" ]; then
         #validate the URL
-        validate_url "${props[$param]}"
-        docker_cmd+=" --$param=${props[$param]} review" 
+        trimmed_url=$(echo "${props[$param]}" | sed 's/^[ \t]*//;s/[ \t]*$//')
+        validate_url $trimmed_url
+        docker_cmd+=" --$param=${trimmed_url} review"
     elif [ "$param" == "git.provider" ]; then
         #validate the URL
         props[$param]=$(validate_git_provider "${props[$param]}")
@@ -438,7 +485,24 @@ for param in "${required_params[@]}" "${bee_params[@]}" "${optional_params[@]}";
         docker_cmd+=" --$param=${props[$param]}"
     elif [ "$param" == "mode" ]; then
         validate_mode "${props[$param]}"
-        docker_cmd+=" --$param=${props[$param]}" 
+        docker_cmd+=" --$param=${props[$param]}"
+    elif [ "$param" == "env" ]; then
+        validate_env "${props[$param]}"
+        docker_cmd+=" --$param=${props[$param]}"
+    elif [ "$param" == "cli_path" ]; then
+        check_cli_directory "${props[$param]}"
+        cli_dir=${props[$param]}
+        docker_init_cmd+='  -v $cli_dir:/cli_dir'
+    elif [ "$param" == "output_path" ]; then
+        if [ -n "${props[$param]}" ]; then
+          check_output_directory "${props[$param]}"
+          return_val=$? # Capture the return value of the check output directory
+          if [ $return_val -eq 0 ]; then
+            output_path=${props[$param]}
+            docker_init_cmd+=' -v "$output_path":/output_path'
+            docker_cmd+=" --$param=/output_path"
+          fi
+        fi
     else
         docker_cmd+=" --$param=${props[$param]}"
     fi
@@ -446,6 +510,7 @@ for param in "${required_params[@]}" "${bee_params[@]}" "${optional_params[@]}";
   fi
 done
 
+docker_cmd=$docker_init_cmd$docker_cmd
 param_bito_access_key="bito_cli.bito.access_key"
 param_git_access_token="git.access_token"
 if [ "$mode" == "server" ]; then
