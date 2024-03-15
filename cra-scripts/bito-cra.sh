@@ -464,8 +464,9 @@ for param in "${required_params[@]}" "${bee_params[@]}" "${optional_params[@]}";
         docker_cmd+=" --$param=${props[$param]}"
     elif [ "$param" == "pr_url" ]; then
         #validate the URL
-        validate_url "${props[$param]}"
-        docker_cmd+=" --$param=${props[$param]} review" 
+        trimmed_url=$(echo "${props[$param]}" | sed 's/^[ \t]*//;s/[ \t]*$//')
+        validate_url $trimmed_url
+        docker_cmd+=" --$param=${trimmed_url} review"
     elif [ "$param" == "git.provider" ]; then
         #validate the URL
         props[$param]=$(validate_git_provider "${props[$param]}")
