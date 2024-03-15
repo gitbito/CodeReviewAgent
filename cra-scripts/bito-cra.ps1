@@ -442,8 +442,9 @@ foreach ($param in $required_params + $bee_params + $optional_params) {
             $server_port = $props[$param]
             $docker_cmd += " --$param=$($props[$param])"
         } elseif ($param -eq "pr_url") {
-            Validate-Url $props[$param]
-            $docker_cmd += " --$param=$($props[$param]) review"
+            $trimmedUrl = $props[$param].Trim()
+            Validate-Url $trimmedUrl
+            $docker_cmd += " --$param=$($trimmedUrl) review"
         } elseif ($param -eq "git.provider") {
             $validated_gitprovider = Validate-GitProvider $props[$param]
             $docker_cmd += " --$param=$validated_gitprovider"
