@@ -83,6 +83,16 @@ function Validate-Mode {
     }
 }
 
+# Function to validate an environment value i.e. prod or staging
+function Validate-Env {
+    param($env_val)
+
+    if ($env_val -ne "prod" -and $env_val -ne "staging") {
+      Write-Host "Invalid env value. Please enter either prod or staging."
+      exit 1
+    }
+}
+
 # Function to display URL using IP address and port
 # Run docker ps -l command and store the output
 function Display-DockerUrl {
@@ -147,6 +157,37 @@ function Check-ActionDirectory {
 
     #return valid action directory
     return $action_dir
+}
+
+# Function to check if the CLI directory exists
+function Check-CliDirectory {
+    param($cli_dir)
+
+    if (-not $cli_dir) {
+        Write-Host "CLI directory not provided!"
+        exit 1
+    }
+
+    if (-not (Test-Path -Path $cli_dir -PathType Container)) {
+        Write-Host "CLI directory not found!"
+        exit 1
+    }
+
+    #return valid cli directory
+    return $cli_dir
+}
+
+# Function to check if the output path directory exists
+function Check-OutputDirectory {
+    param($output_path)
+
+    if (-not (Test-Path -Path $output_path -PathType Container)) {
+        Write-Host "Output path directory not found!"
+        exit 1
+    }
+
+    #return valid cli directory
+    return $output_path
 }
 
 function Stop-CRA {
@@ -294,7 +335,11 @@ $optional_params_cli = @(
     "static_analysis",
     "dependency_check",
     "dependency_check.snyk_auth_token",
-    "cra_version"
+    "cra_version",
+    "env",
+    "cli_path",
+    "output_path"
+    "git.domain"
 )
 
 # Parameters that are required/optional in mode server
@@ -312,6 +357,9 @@ $optional_params_server = @(
     "dependency_check.snyk_auth_token",
     "server_port",
     "cra_version"
+    "env"
+    "cli_path"
+    "git.domain"
 )
 
 $bee_params = @(
@@ -337,9 +385,9 @@ if ($props[$param_cra_version] -ne '') {
 $docker_pull = "docker pull bitoai/cra:${cra_version}"
 
 # Construct the docker run command
-$docker_cmd = "docker run --rm -it"
+$docker_init_cmd = "docker run --rm -it"
 if (-not([string]::IsNullOrEmpty($action_directory))) {
-    $docker_cmd = "docker run --rm -it -v ${action_directory}:/action_dir"
+    $docker_init_cmd = "docker run --rm -it -v ${action_directory}:/action_dir"
 }
 
 $required_params = $required_params_cli
@@ -348,6 +396,7 @@ $mode = "cli"
 $param_mode = "mode"
 $server_port = "10051"
 $param_server_port = "server_port"
+$docker_cmd = ""
 # handle if CRA is starting in server mode using start command.
 if ($force_mode) {
     $props[$param_mode] = $force_mode
@@ -378,7 +427,7 @@ foreach ($param in $required_params) {
 foreach ($param in $optional_params) {
     if ($param -eq "dependency_check.snyk_auth_token" -and $props["dependency_check"] -eq "True") {
         Ask-For-Param $param $false
-    } elseif ($param -ne "dependency_check.snyk_auth_token") {
+    } elseif ($param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "git.domain") {
         Ask-For-Param $param $false
     }
 }
@@ -410,12 +459,27 @@ foreach ($param in $required_params + $bee_params + $optional_params) {
         } elseif ($param -eq "mode") {
             Validate-Mode $props[$param]
             $docker_cmd += " --$param=$($props[$param])"
+        } elseif ($param -eq "env") {
+            Validate-Env $props[$param]
+            $docker_cmd += " --$param=$($props[$param])"
+        } elseif ($param -eq "cli_path") {
+            $cli_dir = Check-CliDirectory $($props[$param])
+            $docker_init_cmd += " -v ${cli_dir}:/cli_dir"
+        } elseif ($param -eq "output_path") {
+            if ($($props[$param]) -ne $null -and $($props[$param]) -ne "") {
+                $output_path = Check-OutputDirectory $($props[$param])
+                if ($output_path -ne $null -and $output_path -ne "") {
+                    $docker_init_cmd += " -v '${output_path}:/output_path'"
+                    $docker_cmd += " --$param=/output_path"
+                }
+            }
         } else {
             $docker_cmd += " --$param=$($props[$param])"
         }
     }
 }
 
+$docker_cmd = $docker_init_cmd + $docker_cmd
 $param_bito_access_key = "bito_cli.bito.access_key"
 $param_git_access_token = "git.access_token"
 if ($mode -eq "server") {
