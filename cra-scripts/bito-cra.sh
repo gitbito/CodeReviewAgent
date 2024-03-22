@@ -93,6 +93,19 @@ validate_env() {
   fi
 }
 
+# Function to validate a review_comments vallue i.e. 1 mapped to "FULLPOST" or 2 mapped to "INLINE"
+validate_review_comments() {
+  local review_comments="$1"
+  if [ "$review_comments" == "1" ]; then
+    echo "FULLPOST"
+  elif [ "$review_comments" == "2" ]; then
+    echo "INLINE"
+  else
+    echo "Invalid review comments value. Please enter either 1 or 2."
+    exit 1
+  fi
+}
+
 # Function to display URL using IP address and port
 # Run docker ps -l command and store the output
 display_docker_url() {
@@ -355,7 +368,9 @@ required_params_cli=(
 )
 
 optional_params_cli=(
+  "review_comments"
   "static_analysis"
+  "static_analysis_tool"
   "dependency_check"
   "dependency_check.snyk_auth_token"
   "cra_version"
@@ -363,6 +378,7 @@ optional_params_cli=(
   "cli_path"
   "output_path"
   "git.domain"
+  "code_context"
 )
 
 # Parameters that are required/optional in mode server
@@ -375,7 +391,9 @@ optional_params_server=(
   "git.provider"
   "git.access_token"
   "bito_cli.bito.access_key"
+  "review_comments"
   "static_analysis"
+  "static_analysis_tool"
   "dependency_check"
   "dependency_check.snyk_auth_token"
   "server_port"
@@ -383,6 +401,7 @@ optional_params_server=(
   "env"
   "cli_path"
   "git.domain"
+  "code_context"
 )
 
 bee_params=(
@@ -444,7 +463,7 @@ done
 for param in "${optional_params[@]}"; do
   if [ "$param" == "dependency_check.snyk_auth_token" ] && [ "${props["dependency_check"]}" == "True" ]; then
       ask_for_param "$param" "False"
-  elif [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "git.domain" ]; then
+  elif [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "static_analysis_tool" ] && [ "$param" != "git.domain" ]; then
       ask_for_param "$param" "False"
   fi
 done
@@ -452,7 +471,6 @@ done
 # Append parameters to the docker command
 for param in "${required_params[@]}" "${bee_params[@]}" "${optional_params[@]}"; do
 
-  #echo $param ${props[$param]}
   if [ -n "${props[$param]}" ]; then
 
     if [ "$param" == "cra_version" ]; then
@@ -475,12 +493,18 @@ for param in "${required_params[@]}" "${bee_params[@]}" "${optional_params[@]}";
         #handle special case of static_analysis.fb_infer.enabled using static_analysis
         props[$param]=$(validate_boolean "${props[$param]}")
         docker_cmd+=" --static_analysis.fb_infer.enabled=${props[$param]}"
+    elif [ "$param" == "static_analysis_tool" ]; then
+        docker_cmd+=" --static_analysis_tool=${props[$param]}"
     elif [ "$param" == "dependency_check" ]; then
         #validate the dependency check boolean value
         props[$param]=$(validate_boolean "${props[$param]}")
         docker_cmd+=" --dependency_check.enabled=${props[$param]}" 
     elif [ "$param" == "code_feedback" ]; then
         #validate the code feedback boolean value
+        props[$param]=$(validate_boolean "${props[$param]}")
+        docker_cmd+=" --$param=${props[$param]}"
+    elif [ "$param" == "code_context" ]; then
+        #validate the code context boolean value
         props[$param]=$(validate_boolean "${props[$param]}")
         docker_cmd+=" --$param=${props[$param]}"
     elif [ "$param" == "mode" ]; then
@@ -502,6 +526,16 @@ for param in "${required_params[@]}" "${bee_params[@]}" "${optional_params[@]}";
             docker_init_cmd+=' -v "$output_path":/output_path'
             docker_cmd+=" --$param=/output_path"
           fi
+        fi
+    elif [ "$param" == "review_comments" ]; then
+        #validate the review comments value
+        props[$param]=$(validate_review_comments "${props[$param]}")
+        return_val=$? # Capture the return value of the check output directory
+        if [ $return_val -eq 0 ]; then
+          docker_cmd+=" --$param=${props[$param]}"
+        else 
+          echo "Invalid value provided for review_comments. Exiting."
+          exit 1
         fi
     else
         docker_cmd+=" --$param=${props[$param]}"
