@@ -93,6 +93,25 @@ function Validate-Env {
     }
 }
 
+# Function to validate a review_comments vallue i.e. 1 mapped to "FULLPOST" or 2 mapped to "INLINE"
+function Validate-ReviewComments {
+    param($reviewcomments_val)
+
+    # Check if the provided value is either "1" or "2"
+    if ($reviewcomments_val -ne "1" -and $reviewcomments_val -ne "2") {
+        Write-Host "Invalid review comments value. Please enter either 1 or 2."
+        exit 1
+    }
+
+    if ($reviewcomments_val -eq "1") {
+        return "FULLPOST"
+    }
+
+    if ($reviewcomments_val -eq "2") {
+        return "INLINE"
+    }
+}
+
 # Function to display URL using IP address and port
 # Run docker ps -l command and store the output
 function Display-DockerUrl {
@@ -332,7 +351,9 @@ $required_params_cli = @(
 )
 
 $optional_params_cli = @(
+    "review_comments",
     "static_analysis",
+    "static_analysis_tool",
     "dependency_check",
     "dependency_check.snyk_auth_token",
     "cra_version",
@@ -340,6 +361,7 @@ $optional_params_cli = @(
     "cli_path",
     "output_path"
     "git.domain"
+    "code_context"
 )
 
 # Parameters that are required/optional in mode server
@@ -352,7 +374,9 @@ $optional_params_server = @(
     "git.provider",
     "git.access_token",
     "bito_cli.bito.access_key",
+    "review_comments",
     "static_analysis",
+    "static_analysis_tool",
     "dependency_check",
     "dependency_check.snyk_auth_token",
     "server_port",
@@ -360,6 +384,7 @@ $optional_params_server = @(
     "env"
     "cli_path"
     "git.domain"
+    "code_context"
 )
 
 $bee_params = @(
@@ -427,7 +452,7 @@ foreach ($param in $required_params) {
 foreach ($param in $optional_params) {
     if ($param -eq "dependency_check.snyk_auth_token" -and $props["dependency_check"] -eq "True") {
         Ask-For-Param $param $false
-    } elseif ($param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "git.domain") {
+    } elseif ($param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "static_analysis_tool" -and $param -ne "git.domain") {
         Ask-For-Param $param $false
     }
 }
@@ -451,10 +476,16 @@ foreach ($param in $required_params + $bee_params + $optional_params) {
         } elseif ($param -eq "static_analysis") {
             $validated_boolean = Validate-Boolean $props[$param]
             $docker_cmd += " --static_analysis.fb_infer.enabled=$validated_boolean"
+        } elseif ($param -eq "static_analysis_tool") {
+            $docker_cmd += " --$param=$($props[$param])"
         } elseif ($param -eq "dependency_check") {
             $validated_boolean = Validate-Boolean $props[$param]
             $docker_cmd += " --dependency_check.enabled=$validated_boolean"
         } elseif ($param -eq "code_feedback") {
+            $validated_boolean = Validate-Boolean $props[$param]
+            $docker_cmd += " --$param=$validated_boolean"
+        } elseif ($param -eq "code_context") {
+            #validate the code context boolean value
             $validated_boolean = Validate-Boolean $props[$param]
             $docker_cmd += " --$param=$validated_boolean"
         } elseif ($param -eq "mode") {
@@ -474,6 +505,9 @@ foreach ($param in $required_params + $bee_params + $optional_params) {
                     $docker_cmd += " --$param=/output_path"
                 }
             }
+        } elseif ($param -eq "review_comments") {
+            $review_comments = Validate-ReviewComments $props[$param]
+            $docker_cmd += " --$param=$review_comments"
         } else {
             $docker_cmd += " --$param=$($props[$param])"
         }
