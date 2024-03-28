@@ -17,7 +17,7 @@ jobs:
       - name: Set Options Environment Variable for Issue Comment
         if: github.event_name == 'issue_comment'
         run: |
-          echo "OPTIONS=--static_analysis.fb_infer.enabled=True --code_feedback=True --dependency_check.enabled=False --bee.path=/automation-platform  --bee.actn_dir=/automation-platform/default_bito_ad/bito_modules --git.access_token=${{ secrets.GIT_ACCESS_TOKEN }} --bito_cli.bito.access_key=${{ secrets.BITO_ACCESS_KEY }}${{ secrets.GIT_DOMAIN && ' --git.domain=' || '' }}${{ secrets.GIT_DOMAIN }}" >> $GITHUB_ENV
+          echo "OPTIONS=--static_analysis.fb_infer.enabled=True --code_feedback=True --dependency_check.enabled=False --bee.path=/automation-platform  --bee.actn_dir=/automation-platform/default_bito_ad/bito_modules --git.access_token=${{ secrets.GIT_ACCESS_TOKEN }} --bito_cli.bito.access_key=${{ secrets.BITO_ACCESS_KEY }}${{ $GIT_DOMAIN && ' --git.domain=' || '' }}${{ $GIT_DOMAIN }}" >> $GITHUB_ENV
       - name: Code Review Agent - Issue Comment
         if: github.event_name == 'issue_comment'
         uses: gitbito/codereviewagent@latest
@@ -29,7 +29,7 @@ jobs:
       - name: Set Options Environment Variable for Pull Request
         if: github.event_name == 'pull_request'
         run: |
-          echo "OPTIONS=--static_analysis.fb_infer.enabled=True --code_feedback=True --dependency_check.enabled=False --bee.path=/automation-platform  --bee.actn_dir=/automation-platform/default_bito_ad/bito_modules --git.access_token=${{ secrets.GIT_ACCESS_TOKEN }} --bito_cli.bito.access_key=${{ secrets.BITO_ACCESS_KEY }}${{ secrets.GIT_DOMAIN && ' --git.domain=' || '' }}${{ secrets.GIT_DOMAIN }}" >> $GITHUB_ENV
+          echo "OPTIONS=--static_analysis.fb_infer.enabled=True --code_feedback=True --dependency_check.enabled=False --bee.path=/automation-platform  --bee.actn_dir=/automation-platform/default_bito_ad/bito_modules --git.access_token=${{ secrets.GIT_ACCESS_TOKEN }} --bito_cli.bito.access_key=${{ secrets.BITO_ACCESS_KEY }}${{ $GIT_DOMAIN && ' --git.domain=' || '' }}${{ $GIT_DOMAIN }}" >> $GITHUB_ENV
       - name: Code Review Agent action step
         if: github.event_name == 'pull_request'
         uses: gitbito/codereviewagent@latest
