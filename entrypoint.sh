@@ -19,6 +19,7 @@ done
 
 # Run the Docker container from the specified image
 if [ "$valid_command" = true ]; then
+  exec docker pull bitoai/cra:latest 
   exec docker run bitoai/cra:latest --mode=cli --pr_url $INPUT_PR $INPUT_COMMAND $INPUT_OPTIONS
 else
   echo "$INPUT_COMMAND is not supported"
