@@ -1,6 +1,6 @@
 on:
   pull_request:
-    types: [opened, reopened, ready_for_review, review_requested]
+    types: [opened]
   issue_comment:
     types: [created]
 
@@ -21,7 +21,11 @@ jobs:
           if [[ -n "${{ vars.GIT_DOMAIN }}" ]]; then
             GIT_DOMAIN_OPTION=" --git.domain=${{ vars.GIT_DOMAIN }}"
           fi
-          echo "OPTIONS=--static_analysis.fb_infer.enabled=True --code_feedback=True --dependency_check.enabled=False --bee.path=/automation-platform  --bee.actn_dir=/automation-platform/default_bito_ad/bito_modules --git.access_token=${{ secrets.GIT_ACCESS_TOKEN }} --bito_cli.bito.access_key=${{ secrets.BITO_ACCESS_KEY }}${GIT_DOMAIN_OPTION}" >> $GITHUB_ENV
+          STATIC_ANALYSIS_TOOL_OPTION=""
+          if [[ -n "${{ vars.STATIC_ANALYSIS_TOOL }}" ]]; then
+            STATIC_ANALYSIS_TOOL_OPTION=" --static_analysis_tool=${{ vars.STATIC_ANALYSIS_TOOL }}"
+          fi
+          echo "OPTIONS=--static_analysis.fb_infer.enabled=True --code_feedback=True --dependency_check.enabled=False --bee.path=/automation-platform  --bee.actn_dir=/automation-platform/default_bito_ad/bito_modules --git.access_token=${{ secrets.GIT_ACCESS_TOKEN }} --bito_cli.bito.access_key=${{ secrets.BITO_ACCESS_KEY }}${GIT_DOMAIN_OPTION}${STATIC_ANALYSIS_TOOL_OPTION}" >> $GITHUB_ENV
       - name: Code Review Agent - Issue Comment
         if: github.event_name == 'issue_comment'
         uses: gitbito/codereviewagent@main
@@ -37,7 +41,11 @@ jobs:
           if [[ -n "${{ vars.GIT_DOMAIN }}" ]]; then
             GIT_DOMAIN_OPTION=" --git.domain=${{ vars.GIT_DOMAIN }}"
           fi
-          echo "OPTIONS=--static_analysis.fb_infer.enabled=True --code_feedback=True --dependency_check.enabled=False --bee.path=/automation-platform  --bee.actn_dir=/automation-platform/default_bito_ad/bito_modules --git.access_token=${{ secrets.GIT_ACCESS_TOKEN }} --bito_cli.bito.access_key=${{ secrets.BITO_ACCESS_KEY }}${GIT_DOMAIN_OPTION}" >> $GITHUB_ENV
+          STATIC_ANALYSIS_TOOL_OPTION=""
+          if [[ -n "${{ vars.STATIC_ANALYSIS_TOOL }}" ]]; then
+            STATIC_ANALYSIS_TOOL_OPTION=" --static_analysis_tool=${{ vars.STATIC_ANALYSIS_TOOL }}"
+          fi
+          echo "OPTIONS=--static_analysis.fb_infer.enabled=True --code_feedback=True --dependency_check.enabled=False --bee.path=/automation-platform  --bee.actn_dir=/automation-platform/default_bito_ad/bito_modules --git.access_token=${{ secrets.GIT_ACCESS_TOKEN }} --bito_cli.bito.access_key=${{ secrets.BITO_ACCESS_KEY }}${GIT_DOMAIN_OPTION}${STATIC_ANALYSIS_TOOL_OPTION}" >> $GITHUB_ENV
       - name: Code Review Agent action step
         if: github.event_name == 'pull_request'
         uses: gitbito/codereviewagent@main
