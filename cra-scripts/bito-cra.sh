@@ -371,6 +371,7 @@ optional_params_cli=(
   "review_comments"
   "static_analysis"
   "static_analysis_tool"
+  "review_scope"
   "dependency_check"
   "dependency_check.snyk_auth_token"
   "cra_version"
@@ -394,6 +395,7 @@ optional_params_server=(
   "review_comments"
   "static_analysis"
   "static_analysis_tool"
+  "review_scope"
   "dependency_check"
   "dependency_check.snyk_auth_token"
   "server_port"
@@ -463,7 +465,7 @@ done
 for param in "${optional_params[@]}"; do
   if [ "$param" == "dependency_check.snyk_auth_token" ] && [ "${props["dependency_check"]}" == "True" ]; then
       ask_for_param "$param" "False"
-  elif [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "static_analysis_tool" ] && [ "$param" != "git.domain" ]; then
+  elif [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "static_analysis_tool" ] && [ "$param" != "git.domain" ] && [ "$param" != "review_scope" ]; then
       ask_for_param "$param" "False"
   fi
 done
@@ -495,6 +497,9 @@ for param in "${required_params[@]}" "${bee_params[@]}" "${optional_params[@]}";
         docker_cmd+=" --static_analysis.fb_infer.enabled=${props[$param]}"
     elif [ "$param" == "static_analysis_tool" ]; then
         docker_cmd+=" --static_analysis_tool=${props[$param]}"
+    elif [ "$param" == "review_scope" ]; then
+        scopes=$(echo ${props[$param]} | sed 's/, */,/g')
+        docker_cmd+=" --review_scope='[$scopes]'"
     elif [ "$param" == "dependency_check" ]; then
         #validate the dependency check boolean value
         props[$param]=$(validate_boolean "${props[$param]}")

@@ -354,6 +354,7 @@ $optional_params_cli = @(
     "review_comments",
     "static_analysis",
     "static_analysis_tool",
+    "review_scope",
     "dependency_check",
     "dependency_check.snyk_auth_token",
     "cra_version",
@@ -377,6 +378,7 @@ $optional_params_server = @(
     "review_comments",
     "static_analysis",
     "static_analysis_tool",
+    "review_scope",
     "dependency_check",
     "dependency_check.snyk_auth_token",
     "server_port",
@@ -452,7 +454,7 @@ foreach ($param in $required_params) {
 foreach ($param in $optional_params) {
     if ($param -eq "dependency_check.snyk_auth_token" -and $props["dependency_check"] -eq "True") {
         Ask-For-Param $param $false
-    } elseif ($param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "static_analysis_tool" -and $param -ne "git.domain") {
+    } elseif ($param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "static_analysis_tool" -and $param -ne "git.domain" -and $param -ne "review_scope") {
         Ask-For-Param $param $false
     }
 }
@@ -478,6 +480,9 @@ foreach ($param in $required_params + $bee_params + $optional_params) {
             $docker_cmd += " --static_analysis.fb_infer.enabled=$validated_boolean"
         } elseif ($param -eq "static_analysis_tool") {
             $docker_cmd += " --$param=$($props[$param])"
+        } elseif ($param -eq "review_scope") {
+            $scopes = $($props[$param]) -replace ',\s*', ','
+            $docker_cmd += " --$param='[$scopes]'"
         } elseif ($param -eq "dependency_check") {
             $validated_boolean = Validate-Boolean $props[$param]
             $docker_cmd += " --dependency_check.enabled=$validated_boolean"
