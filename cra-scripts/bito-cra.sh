@@ -372,6 +372,7 @@ optional_params_cli=(
   "static_analysis"
   "static_analysis_tool"
   "review_scope"
+  "exclude_branches"
   "dependency_check"
   "dependency_check.snyk_auth_token"
   "cra_version"
@@ -396,6 +397,7 @@ optional_params_server=(
   "static_analysis"
   "static_analysis_tool"
   "review_scope"
+  "exclude_branches"
   "dependency_check"
   "dependency_check.snyk_auth_token"
   "server_port"
@@ -434,6 +436,7 @@ required_params=("${required_params_cli[@]}")
 optional_params=("${optional_params_cli[@]}")
 mode="cli"
 param_mode="mode"
+command="review"
 docker_cmd=""
 #handle if CRA is starting in server mode using start command.
 if [ -n "$force_mode" ]; then
@@ -465,7 +468,7 @@ done
 for param in "${optional_params[@]}"; do
   if [ "$param" == "dependency_check.snyk_auth_token" ] && [ "${props["dependency_check"]}" == "True" ]; then
       ask_for_param "$param" "False"
-  elif [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "static_analysis_tool" ] && [ "$param" != "git.domain" ] && [ "$param" != "review_scope" ]; then
+  elif [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "static_analysis_tool" ] && [ "$param" != "git.domain" ] && [ "$param" != "review_scope" ] && [ "$param" != "exclude_branches" ]; then
       ask_for_param "$param" "False"
   fi
 done
@@ -486,7 +489,7 @@ for param in "${required_params[@]}" "${bee_params[@]}" "${optional_params[@]}";
         #validate the URL
         trimmed_url=$(echo "${props[$param]}" | sed 's/^[ \t]*//;s/[ \t]*$//')
         validate_url $trimmed_url
-        docker_cmd+=" --$param=${trimmed_url} review"
+        docker_cmd+=" --$param=${trimmed_url} --command='${command}' rest"
     elif [ "$param" == "git.provider" ]; then
         #validate the URL
         props[$param]=$(validate_git_provider "${props[$param]}")
@@ -500,6 +503,8 @@ for param in "${required_params[@]}" "${bee_params[@]}" "${optional_params[@]}";
     elif [ "$param" == "review_scope" ]; then
         scopes=$(echo ${props[$param]} | sed 's/, */,/g')
         docker_cmd+=" --review_scope='[$scopes]'"
+    elif [ "$param" == "exclude_branches" ]; then
+        docker_cmd+=" --exclude_branches=${props[$param]}"
     elif [ "$param" == "dependency_check" ]; then
         #validate the dependency check boolean value
         props[$param]=$(validate_boolean "${props[$param]}")
