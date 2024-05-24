@@ -355,6 +355,7 @@ $optional_params_cli = @(
     "static_analysis",
     "static_analysis_tool",
     "review_scope",
+    "exclude_branches",
     "dependency_check",
     "dependency_check.snyk_auth_token",
     "cra_version",
@@ -379,6 +380,7 @@ $optional_params_server = @(
     "static_analysis",
     "static_analysis_tool",
     "review_scope",
+    "exclude_branches",
     "dependency_check",
     "dependency_check.snyk_auth_token",
     "server_port",
@@ -423,6 +425,7 @@ $mode = "cli"
 $param_mode = "mode"
 $server_port = "10051"
 $param_server_port = "server_port"
+$command = "review"
 $docker_cmd = ""
 # handle if CRA is starting in server mode using start command.
 if ($force_mode) {
@@ -454,7 +457,7 @@ foreach ($param in $required_params) {
 foreach ($param in $optional_params) {
     if ($param -eq "dependency_check.snyk_auth_token" -and $props["dependency_check"] -eq "True") {
         Ask-For-Param $param $false
-    } elseif ($param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "static_analysis_tool" -and $param -ne "git.domain" -and $param -ne "review_scope") {
+    } elseif ($param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "static_analysis_tool" -and $param -ne "git.domain" -and $param -ne "review_scope" -and $param -ne "exclude_branches") {
         Ask-For-Param $param $false
     }
 }
@@ -471,7 +474,7 @@ foreach ($param in $required_params + $bee_params + $optional_params) {
         } elseif ($param -eq "pr_url") {
             $trimmedUrl = $props[$param].Trim()
             Validate-Url $trimmedUrl
-            $docker_cmd += " --$param=$($trimmedUrl) review"
+            $docker_cmd += " --$param=$($trimmedUrl) --command=$($command) rest"
         } elseif ($param -eq "git.provider") {
             $validated_gitprovider = Validate-GitProvider $props[$param]
             $docker_cmd += " --$param=$validated_gitprovider"
@@ -483,6 +486,8 @@ foreach ($param in $required_params + $bee_params + $optional_params) {
         } elseif ($param -eq "review_scope") {
             $scopes = $($props[$param]) -replace ',\s*', ','
             $docker_cmd += " --$param='[$scopes]'"
+        } elseif ($param -eq "exclude_branches") {
+            $docker_cmd += " --exclude_branches=$($props[$param])"
         } elseif ($param -eq "dependency_check") {
             $validated_boolean = Validate-Boolean $props[$param]
             $docker_cmd += " --dependency_check.enabled=$validated_boolean"
