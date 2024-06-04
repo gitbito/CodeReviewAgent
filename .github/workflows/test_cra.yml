@@ -16,6 +16,7 @@ jobs:
     steps:
       - name: Set Options Environment Variable
         run: |
+          echo "EVENT_NAME=${{ github.event_name }}" >> $GITHUB_ENV
           GIT_DOMAIN_OPTION=""
           if [[ -n "${{ vars.GIT_DOMAIN }}" ]]; then
             GIT_DOMAIN_OPTION=" --git.domain=${{ vars.GIT_DOMAIN }}"
