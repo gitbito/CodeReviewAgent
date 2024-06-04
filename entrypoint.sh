@@ -12,6 +12,7 @@ if [ "$EVENT_NAME" = "pull_request" ]; then
 else
     INPUT_OPTIONS="$INPUT_OPTIONS --cr_event_type=manual"
 fi
+echo $INPUT_OPTIONS
 
 SUPPORTED_COMMANDS=("/review" "review")
 
