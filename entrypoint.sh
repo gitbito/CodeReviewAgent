@@ -5,6 +5,7 @@
 echo $INPUT_PR
 echo $INPUT_COMMAND
 echo $INPUT_OPTIONS
+echo $EVENT_NAME
 
 SUPPORTED_COMMANDS=("/review" "review")
 
@@ -23,8 +24,8 @@ done
 
 # Run the Docker container from the specified image
 if [ "$valid_command" = true ]; then
-  docker pull bitoai/cra:latest >&2
-  exec docker run bitoai/cra:latest --mode=cli --pr_url $INPUT_PR --command "$INPUT_COMMAND" rest $INPUT_OPTIONS
+  docker pull bitoai/cra:1.3.0 >&2
+  exec docker run bitoai/cra:1.3.0 --mode=cli --pr_url $INPUT_PR --command "$INPUT_COMMAND" rest $INPUT_OPTIONS
 else
   echo "$INPUT_COMMAND is not supported"
   exit 0  # Exit the script with a non-zero status code
