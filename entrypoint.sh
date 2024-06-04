@@ -7,11 +7,16 @@ echo $INPUT_COMMAND
 echo $INPUT_OPTIONS
 echo $EVENT_NAME
 
+if [ "$EVENT_NAME" = "pull_request" ]; then
+    INPUT_OPTIONS="$INPUT_OPTIONS --cr_event_type=automated"
+else
+    INPUT_OPTIONS="$INPUT_OPTIONS --cr_event_type=manual"
+fi
+
 SUPPORTED_COMMANDS=("/review" "review")
 
 #INPUT_COMMAND=$(echo "$INPUT_COMMAND" | tr -d '[:space:]')
 INPUT_COMMAND=$(echo "$INPUT_COMMAND" | xargs)
-
 
 # Check if the command starts with any of the supported commands
 for command in "${SUPPORTED_COMMANDS[@]}"; do
