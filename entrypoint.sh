@@ -8,7 +8,7 @@ echo $INPUT_OPTIONS
 echo $EVENT_NAME
 
 if [ "$EVENT_NAME" = "pull_request" ]; then
-    INPUT_OPTIONS="$INPUT_OPTIONS --cr_event_type=automatic"
+    INPUT_OPTIONS="$INPUT_OPTIONS --cr_event_type=automated"
 else
     INPUT_OPTIONS="$INPUT_OPTIONS --cr_event_type=manual"
 fi
