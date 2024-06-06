@@ -112,6 +112,16 @@ function Validate-ReviewComments {
     }
 }
 
+$crEventType = "automated"
+function ValidateCrEventType {
+    param($crEventTypeVal)
+    if ($crEventTypeVal -eq "manual"){
+        return "manual"
+    }else {
+        return "automated"
+    }
+}
+
 # Function to display URL using IP address and port
 # Run docker ps -l command and store the output
 function Display-DockerUrl {
@@ -356,6 +366,8 @@ $optional_params_cli = @(
     "static_analysis_tool",
     "review_scope",
     "exclude_branches",
+    "exclude_files",
+    "exclude_draft_pr",
     "dependency_check",
     "dependency_check.snyk_auth_token",
     "cra_version",
@@ -364,6 +376,7 @@ $optional_params_cli = @(
     "output_path"
     "git.domain"
     "code_context"
+    "cr_event_type"
 )
 
 # Parameters that are required/optional in mode server
@@ -381,6 +394,8 @@ $optional_params_server = @(
     "static_analysis_tool",
     "review_scope",
     "exclude_branches",
+    "exclude_files",
+    "exclude_draft_pr",
     "dependency_check",
     "dependency_check.snyk_auth_token",
     "server_port",
@@ -389,6 +404,7 @@ $optional_params_server = @(
     "cli_path"
     "git.domain"
     "code_context"
+    "cr_event_type"
 )
 
 $bee_params = @(
@@ -457,7 +473,7 @@ foreach ($param in $required_params) {
 foreach ($param in $optional_params) {
     if ($param -eq "dependency_check.snyk_auth_token" -and $props["dependency_check"] -eq "True") {
         Ask-For-Param $param $false
-    } elseif ($param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "static_analysis_tool" -and $param -ne "git.domain" -and $param -ne "review_scope" -and $param -ne "exclude_branches") {
+    } elseif ($param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "static_analysis_tool" -and $param -ne "git.domain" -and $param -ne "review_scope" -and $param -ne "exclude_branches" -and $param -ne "exclude_files" -and $param -ne "exclude_draft_pr" -and $param -ne "cr_event_type") {
         Ask-For-Param $param $false
     }
 }
@@ -487,7 +503,11 @@ foreach ($param in $required_params + $bee_params + $optional_params) {
             $scopes = $($props[$param]) -replace ',\s*', ','
             $docker_cmd += " --$param='[$scopes]'"
         } elseif ($param -eq "exclude_branches") {
-            $docker_cmd += " --exclude_branches=$($props[$param])"
+            $docker_cmd += " --exclude_branches='$($props[$param])'"
+        } elseif ($param -eq "exclude_files") {
+            $docker_cmd += " --exclude_files='$($props[$param])'"
+        } elseif ($param -eq "exclude_draft_pr") {
+            $docker_cmd += " --exclude_draft_pr=$($props[$param])"
         } elseif ($param -eq "dependency_check") {
             $validated_boolean = Validate-Boolean $props[$param]
             $docker_cmd += " --dependency_check.enabled=$validated_boolean"
@@ -518,11 +538,14 @@ foreach ($param in $required_params + $bee_params + $optional_params) {
         } elseif ($param -eq "review_comments") {
             $review_comments = Validate-ReviewComments $props[$param]
             $docker_cmd += " --$param=$review_comments"
+        } elseif ($param -eq "cr_event_type") {
+            $crEventType = ValidateCrEventType $props[$param]
         } else {
             $docker_cmd += " --$param=$($props[$param])"
         }
     }
 }
+$docker_cmd += " --cr_event_type=$crEventType"
 
 $docker_cmd = $docker_init_cmd + $docker_cmd
 $param_bito_access_key = "bito_cli.bito.access_key"
