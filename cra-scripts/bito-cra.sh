@@ -93,6 +93,15 @@ validate_env() {
   fi
 }
 
+cr_event_type="automated"
+validate_cr_event_type() {
+  local cr_event_type_val="$1"
+  if [ "$cr_event_type_val" == "manual" ]; then
+    cr_event_type=$cr_event_type_val
+    echo
+  fi
+}
+
 # Function to validate a review_comments vallue i.e. 1 mapped to "FULLPOST" or 2 mapped to "INLINE"
 validate_review_comments() {
   local review_comments="$1"
@@ -373,6 +382,8 @@ optional_params_cli=(
   "static_analysis_tool"
   "review_scope"
   "exclude_branches"
+  "exclude_files"
+  "exclude_draft_pr"
   "dependency_check"
   "dependency_check.snyk_auth_token"
   "cra_version"
@@ -381,6 +392,8 @@ optional_params_cli=(
   "output_path"
   "git.domain"
   "code_context"
+  "nexus_url"
+  "cr_event_type"
 )
 
 # Parameters that are required/optional in mode server
@@ -398,6 +411,8 @@ optional_params_server=(
   "static_analysis_tool"
   "review_scope"
   "exclude_branches"
+  "exclude_files"
+  "exclude_draft_pr"
   "dependency_check"
   "dependency_check.snyk_auth_token"
   "server_port"
@@ -406,6 +421,8 @@ optional_params_server=(
   "cli_path"
   "git.domain"
   "code_context"
+  "nexus_url"
+  "cr_event_type"
 )
 
 bee_params=(
@@ -425,6 +442,7 @@ cra_version="latest"
 
 # Docker pull command
 docker_pull='docker pull bitoai/cra:${cra_version}'
+nexus_url=
 
 # Construct the docker run command
 docker_init_cmd='docker run --rm -it'
@@ -457,7 +475,9 @@ echo ""
 #echo Optional Parameters: "${optional_params[@]}"
 
 # Append Docker Image and Tag Placeholder
-docker_cmd+=' bitoai/cra:${cra_version}'
+docker_repo="bitoai/cra"
+docker_cmd+=' ${docker_repo}:${cra_version}'
+
 
 # Ask for required parameters if they are not set
 for param in "${required_params[@]}"; do
@@ -468,7 +488,7 @@ done
 for param in "${optional_params[@]}"; do
   if [ "$param" == "dependency_check.snyk_auth_token" ] && [ "${props["dependency_check"]}" == "True" ]; then
       ask_for_param "$param" "False"
-  elif [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "static_analysis_tool" ] && [ "$param" != "git.domain" ] && [ "$param" != "review_scope" ] && [ "$param" != "exclude_branches" ]; then
+  elif [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "static_analysis_tool" ] && [ "$param" != "git.domain" ] && [ "$param" != "review_scope" ] && [ "$param" != "exclude_branches" ] && [ "$param" != "nexus_url" ] && [ "$param" != "exclude_files" ] && [ "$param" != "exclude_draft_pr" ] && [ "$param" != "cr_event_type" ]; then
       ask_for_param "$param" "False"
   fi
 done
@@ -504,7 +524,11 @@ for param in "${required_params[@]}" "${bee_params[@]}" "${optional_params[@]}";
         scopes=$(echo ${props[$param]} | sed 's/, */,/g')
         docker_cmd+=" --review_scope='[$scopes]'"
     elif [ "$param" == "exclude_branches" ]; then
-        docker_cmd+=" --exclude_branches=${props[$param]}"
+        docker_cmd+=" --exclude_branches='${props[$param]}'"
+    elif [ "$param" == "exclude_files" ]; then
+        docker_cmd+=" --exclude_files='${props[$param]}'"
+    elif [ "$param" == "exclude_draft_pr" ]; then
+        docker_cmd+=" --exclude_draft_pr=${props[$param]}"
     elif [ "$param" == "dependency_check" ]; then
         #validate the dependency check boolean value
         props[$param]=$(validate_boolean "${props[$param]}")
@@ -547,12 +571,17 @@ for param in "${required_params[@]}" "${bee_params[@]}" "${optional_params[@]}";
           echo "Invalid value provided for review_comments. Exiting."
           exit 1
         fi
+    elif [ "$param" == "nexus_url" ]; then
+        nexus_url=$(echo "${props[$param]}" | sed 's/^[ \t]*//;s/[ \t]*$//')
+    elif [ "$param" == "cr_event_type" ]; then
+        validate_cr_event_type "${props[$param]}"
     else
         docker_cmd+=" --$param=${props[$param]}"
     fi
 
   fi
 done
+docker_cmd+=" --cr_event_type=${cr_event_type}"
 
 docker_cmd=$docker_init_cmd$docker_cmd
 param_bito_access_key="bito_cli.bito.access_key"
@@ -573,8 +602,27 @@ fi
 echo "Running command: $(eval echo $docker_pull)"
 eval "$docker_pull"
 
+
+if [ "$?" == 0 ] ; then
+  echo "Docker image pulled successfully."
+else
+  if [[ -n "$nexus_url" ]]; then
+    nexus_pull='docker pull ${nexus_url}/cra:${cra_version}'
+    echo "Running command: $(eval echo $nexus_pull)"
+    eval "$nexus_pull"
+    if [ "$?" == 0 ]; then
+      docker_repo='${nexus_url}/cra'
+      docker_repo=$(eval echo "$docker_repo")
+      echo "Successfully pulled docker image from Nexus."
+    else
+      echo "Failed to pull docker image from Nexus."
+    fi
+  fi
+fi
+
+
 if [ "$?" == 0 ]; then
-	echo "Running command: $docker_cmd"
+	echo "Running command: $(eval echo $docker_cmd)"
 	eval "$docker_cmd"
 
         if [ "$?" == 0 ] && [ "$mode" == "server" ]; then
