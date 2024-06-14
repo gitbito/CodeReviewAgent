@@ -591,7 +591,6 @@ encrypt_git_secret() {
   local plaintext=$2
 
   # Convert key to hex
-  local key=$(openssl rand -base64 32)
   local hex_key=$(echo -n "$key" | xxd -p -c 256)
 
   # Generate IV (Initialization Vector)
