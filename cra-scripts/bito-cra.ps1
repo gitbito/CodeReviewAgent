@@ -546,16 +546,47 @@ foreach ($param in $required_params + $bee_params + $optional_params) {
     }
 }
 $docker_cmd += " --cr_event_type=$crEventType"
-
 $docker_cmd = $docker_init_cmd + $docker_cmd
+
+function Encrypt-GitSecret {
+    param (
+        [string]$key,
+        [string]$plaintext
+    )
+
+    # Convert key to hex
+    $hexKey = [BitConverter]::ToString([Text.Encoding]::UTF8.GetBytes($key)).Replace("-", "").ToLower()
+
+    # Generate IV (Initialization Vector)
+    $ivBytes = New-Object byte[] 16
+    [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($ivBytes)
+    $iv = [Convert]::ToBase64String($ivBytes)
+    $ivHex = [BitConverter]::ToString($ivBytes).Replace("-", "").ToLower()
+
+    $ciphertext = "$plaintext" | openssl enc -aes-256-cfb -a -K "$hexKey" -iv "$ivHex" -base64
+
+    # Concatenate IV and ciphertext and encode with base64
+    $encryptedText = $ivHex + "$ciphertext" -replace " ", "" -replace "`r`n", "" -replace "`n", "" -replace "`r", ""
+
+    # Output the encrypted text
+    return $encryptedText
+}
+
+$docker_run_command_log = $docker_cmd
 $param_bito_access_key = "bito_cli.bito.access_key"
 $param_git_access_token = "git.access_token"
+$docker_enc_params=
+
 if ($mode -eq "server") {
     if (-not([string]::IsNullOrEmpty($props[$param_bito_access_key])) -and -not([string]::IsNullOrEmpty($props[$param_git_access_token]))) {
         $git_secret = "$($props[$param_bito_access_key])@#~^$($props[$param_git_access_token])"
-
+        $encryption_key = [System.Convert]::ToBase64String((1..32 | ForEach-Object { [byte](Get-Random -Minimum 0 -Maximum 256) }))
+        $git_secret_encrypted = Encrypt-GitSecret -key $encryption_key -plaintext $git_secret
+        $docker_enc_params=" --git.secret=$git_secret_encrypted --encryption_key=$encryption_key"
+        $docker_cmd += " ${docker_enc_params}"
+        
         Write-Host "Use below as Gitlab and Github Webhook secret:"
-        Write-Host $git_secret
+        Write-Host $git_secret_encrypted
         Write-Host
     }
 
@@ -567,7 +598,7 @@ Write-Host "Running command: $($docker_pull)"
 Invoke-Expression $docker_pull
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "Running command: $($docker_cmd)"
+    Write-Host "Running command: $($docker_run_command_log)"
     Invoke-Expression $docker_cmd
 
     if ($LASTEXITCODE -eq 0 -and $mode -eq "server") {
