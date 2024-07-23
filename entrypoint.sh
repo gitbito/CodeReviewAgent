@@ -42,7 +42,7 @@ process_input_options() {
     if [[ "$key" == "--review_scope" ]]; then
       value=$(remove_spaces "$value")
       value=$(to_lowercase "$value")
-    elif [[ "$key" == "--exclude_files" || "$key" == "--exclude_branches" ]]; then
+    elif [[ "$key" == "--exclude_files" || "$key" == "--exclude_branches" || "$key" == "--static_analysis_tool" ]]; then
       value=$(remove_spaces "$value")
     fi
 
