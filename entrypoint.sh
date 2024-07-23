@@ -12,7 +12,6 @@ if [ "$EVENT_NAME" = "pull_request" ]; then
 else
     INPUT_OPTIONS="$INPUT_OPTIONS --cr_event_type=manual"
 fi
-echo $INPUT_OPTIONS
 
 # Function to remove spaces from the value
 remove_spaces() {
