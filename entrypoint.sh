@@ -39,10 +39,10 @@ process_input_options() {
     value=$(echo "$line" | cut -d'=' -f2-)
 
     # Check if the argument is --review_scope, --exclude_files, or --exclude_branches and remove spaces
-    if [[ "$key" == "--review_scope" ]]; then
+    if [[ "$key" == "--review_scope" || "$key" == "--static_analysis_tool" ]]; then
       value=$(remove_spaces "$value")
       value=$(to_lowercase "$value")
-    elif [[ "$key" == "--exclude_files" || "$key" == "--exclude_branches" || "$key" == "--static_analysis_tool" ]]; then
+    elif [[ "$key" == "--exclude_files" || "$key" == "--exclude_branches" ]]; then
       value=$(remove_spaces "$value")
     fi
 
