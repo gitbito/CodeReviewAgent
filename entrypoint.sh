@@ -12,7 +12,51 @@ if [ "$EVENT_NAME" = "pull_request" ]; then
 else
     INPUT_OPTIONS="$INPUT_OPTIONS --cr_event_type=manual"
 fi
-echo $INPUT_OPTIONS
+
+# Function to remove spaces from the value
+remove_spaces() {
+  echo "$1" | tr -d ' '
+}
+
+# Function to convert a string to lowercase
+to_lowercase() {
+  echo "$1" | tr '[:upper:]' '[:lower:]'
+}
+
+process_input_options() {
+  local input="$1"
+  local docker_cmd_args=""
+
+  # Use sed to add newlines before each '--' to simplify processing
+  local formatted_input=$(echo "$input" | sed 's/ --/\n--/g')
+
+  docker_cmd_args=$(echo "$formatted_input" | while IFS= read -r line
+  do
+    # Extract key by cutting until the first '='
+    key=$(echo "$line" | cut -d'=' -f1)
+
+    # Extract value by removing everything before the first '='
+    value=$(echo "$line" | cut -d'=' -f2-)
+
+    # Check if the argument is --review_scope, --exclude_files, or --exclude_branches and remove spaces
+    if [[ "$key" == "--review_scope" || "$key" == "--static_analysis_tool" ]]; then
+      value=$(remove_spaces "$value")
+      value=$(to_lowercase "$value")
+    elif [[ "$key" == "--exclude_files" || "$key" == "--exclude_branches" ]]; then
+      value=$(remove_spaces "$value")
+    fi
+
+    # Append to the modified arguments
+    echo -n "$key=$value "
+  done)
+
+  # Return the docker command arguments
+  echo "$docker_cmd_args"
+}
+
+# Process the input arguments and get the modified result
+docker_cmd_args=$(process_input_options "$INPUT_OPTIONS")
+echo "Docker Command Args: $docker_cmd_args"
 
 SUPPORTED_COMMANDS=("/review" "review")
 
@@ -31,7 +75,7 @@ done
 # Run the Docker container from the specified image
 if [ "$valid_command" = true ]; then
   docker pull bitoai/cra:latest >&2
-  exec docker run bitoai/cra:latest --mode=cli --pr_url $INPUT_PR --command "$INPUT_COMMAND" rest $INPUT_OPTIONS
+  exec docker run bitoai/cra:latest --mode=cli --pr_url $INPUT_PR --command "$INPUT_COMMAND" rest $docker_cmd_args
 else
   echo "$INPUT_COMMAND is not supported"
   exit 0  # Exit the script with a non-zero status code
