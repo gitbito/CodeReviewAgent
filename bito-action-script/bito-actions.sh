@@ -64,7 +64,6 @@ fi
 
 # Print properties
 echo "Agent Instance URL: $agent_instance_url"
-echo "Agent Instance Secret: $agent_instance_secret"
 echo "Git URL: $git_url"
 
 # Execute the curl command
