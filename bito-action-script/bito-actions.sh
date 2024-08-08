@@ -4,8 +4,8 @@
 read_property() {
   local property_key=$1
   local property_file=$2
-  local property_value=$(grep -w "${property_key}" "${property_file}" | cut -d'=' -f2)
-  echo "${property_value}"
+  local property_value=$(grep -w "${property_key}" "${property_file}" | cut -d'=' -f2-)
+  echo "${property_value//\"}"
 }
 
 # Initialize variables with default empty values
@@ -30,19 +30,21 @@ do
   case $arg in
     agent_instance_url=*)
       agent_instance_url="${arg#*=}"
+      agent_instance_url="${agent_instance_url//\"}"
       ;;
     agent_instance_secret=*)
       agent_instance_secret="${arg#*=}"
+      agent_instance_secret="${agent_instance_secret//\"}"
       ;;
     git_url=*)
       git_url="${arg#*=}"
+      git_url="${git_url//\"}"
       ;;
     *)
       echo "Unknown argument: $arg"
       ;;
   esac
 done
-
 
 # Check if any of the required properties are empty
 if [ -z "$agent_instance_url" ]; then
