@@ -17,8 +17,11 @@ This document provides a step-by-step guide for setting up and running the Bito 
 
 ### 3. Configure the CRA Agent
 
-- During the setup process, you'll need to provide a Git access token to allow the CRA to access your repositories. Please refer to [Bito Documentation](https://docs.bito.ai/) to create a Git access token.
-- After a successful configuration, you'll receive a unique **Agent Instance URL** and **Agent Instance Secret**. These credentials are essential for configuring the Bito Action Script.
+- **Git Access Token:** During the setup process, you'll need to provide a Git access token to allow the CRA to access your repositories. Please refer to [Bito Documentation](https://docs.bito.ai/) to create a Git access token.
+
+- **Agent Credentials:** After a successful configuration, you'll receive a unique **Agent Instance URL** and **Agent Instance Secret**. These credentials are essential for configuring the Bito Action Script.
+
+- **Webhook Configuration:** After configuring the CRA, set up the webhook in your selected Git provider. This webhook is necessary to gather analytical data, such as acceptance rates and feedback.
 
 ### 4. Download Bito Action Script
 
@@ -33,7 +36,6 @@ This document provides a step-by-step guide for setting up and running the Bito 
   - agent_instance_secret=<your_agent_instance_secret>
   - pr_url=<your_git_repository_url> (Optional if using the runtime URL method)
   
-
 ### 6. Run the Bito Action Script
 
 You can run the Bito Action Script in two different ways, depending on your preference:
@@ -48,7 +50,6 @@ You can run the Bito Action Script in two different ways, depending on your pref
   ```
   - Replace <pr_url> with the pull request URL you want to review.
   
-
 #### Option 2: Using Runtime Values
 
 - Provide all necessary values directly in the command line:
@@ -74,21 +75,18 @@ During execution, the script will return various responses based on the success 
 Success:- Job Started with Id : ce82fae8-05da-4389-bddc-86ed583ab053
 
 ```
-
 ### 2. Invalid Secret
 **Response:**
 ```plaintext
 {"status":1,"response":"Secret is not valid","created":"2024-08-09T12:32:23.060340616Z"}
 
 ```
-
 ### 3. Invalid Instance URL
 **Response:**
 ```plaintext
 {"status":1,"response":"webhook is invalid: Please create a new instance","created":"2024-08-09T12:33:07.050869506Z"}
 
 ```
-
 ### 4. Missing Input Data for Script
 **Response:**
 ```plaintext
