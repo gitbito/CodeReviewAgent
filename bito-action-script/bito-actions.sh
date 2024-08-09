@@ -11,7 +11,7 @@ read_property() {
 # Initialize variables with default empty values
 agent_instance_url=""
 agent_instance_secret=""
-git_url=""
+pr_url=""
 
 # Check if the first argument is a file
 if [ -f "$1" ]; then
@@ -21,7 +21,7 @@ if [ -f "$1" ]; then
   # Read initial values from the property file
   agent_instance_url=$(read_property "agent_instance_url" "${PROPERTY_FILE}")
   agent_instance_secret=$(read_property "agent_instance_secret" "${PROPERTY_FILE}")
-  git_url=$(read_property "git_url" "${PROPERTY_FILE}")
+  pr_url=$(read_property "pr_url" "${PROPERTY_FILE}")
 fi
 
 # Override with command line arguments if provided
@@ -36,9 +36,9 @@ do
       agent_instance_secret="${arg#*=}"
       agent_instance_secret="${agent_instance_secret//\"}"
       ;;
-    git_url=*)
-      git_url="${arg#*=}"
-      git_url="${git_url//\"}"
+    pr_url=*)
+      pr_url="${arg#*=}"
+      pr_url="${pr_url//\"}"
       ;;
     *)
       echo "Unknown argument: $arg"
@@ -57,21 +57,21 @@ if [ -z "$agent_instance_secret" ]; then
   exit 1
 fi
 
-if [ -z "$git_url" ]; then
-  echo "Error: git_url is empty"
+if [ -z "$pr_url" ]; then
+  echo "Error: pr_url is empty"
   exit 1
 fi
 
 # Print properties
 echo "Agent Instance URL: $agent_instance_url"
-echo "Git URL: $git_url"
+echo "Git URL: $pr_url"
 
 # Execute the curl command
 eval "curl --location '$agent_instance_url' \
 --header 'X-Bito-Action-Token: $agent_instance_secret' \
 --header 'Content-Type: application/json' \
 --data '{
-    \"git_url\": \"$git_url\",
+    \"git_url\": \"$pr_url\",
     \"command\": \"review\",
     \"arguments\": {}
 }'"
