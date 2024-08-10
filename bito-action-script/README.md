@@ -21,7 +21,7 @@ This document provides a step-by-step guide for setting up and running the Bito 
 
 - **Agent Credentials:** After a successful configuration, you'll receive a unique **Agent Instance URL** and **Agent Instance Secret**. These credentials are essential for configuring the Bito Action Script.
 
-- **Webhook Configuration:** After configuring the CRA, set up the webhook in your selected Git provider. This webhook is necessary to gather analytical data, such as acceptance rates and feedback.
+- **Webhook Configuration:** After configuring the CRA, set up the webhook in your selected Git provider. This webhook is necessary to gather analytical data, such as acceptance rates and feedback. Please refer to [Webhook Configuration Documentation](https://docs.bito.ai/bito-dev-agents/ai-code-review-agent/getting-started/install-run-as-a-self-hosted-service/install-run-via-webhooks-service#webhook-setup-guide).
 
 ### 4. Download Bito Action Script
 
