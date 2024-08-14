@@ -48,9 +48,9 @@ function Validate-GitProvider {
     # Convert the input to uppercase 
     $git_provider_val = $git_provider_val.ToUpper()
 
-    # Check if the converted value is either "GITLAB" or "GITHUB"
-    if ($git_provider_val -ne "GITLAB" -and $git_provider_val -ne "GITHUB") {
-        Write-Host "Invalid git provider value. Please enter either GITLAB or GITHUB."
+    # Check if the converted value is either "GITLAB" or "GITHUB" or "BITBUCKET"
+    if ($git_provider_val -ne "GITLAB" -and $git_provider_val -ne "GITHUB" -and $git_provider_val -ne "BITBUCKET") {
+        Write-Host "Invalid git provider value. Please enter either GITLAB or GITHUB or BITBUCKET."
         exit 1
     }
 
