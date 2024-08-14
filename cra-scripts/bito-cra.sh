@@ -48,10 +48,10 @@ validate_url() {
 validate_git_provider() {
   local git_provider_val=$(echo "$1" | tr '[:lower:]' '[:upper:]')
 
-  if [ "$git_provider_val" == "GITLAB" ] || [ "$git_provider_val" == "GITHUB" ]; then
+  if [ "$git_provider_val" == "GITLAB" ] || [ "$git_provider_val" == "GITHUB" ] || [ "$git_provider_val" == "BITBUCKET" ]; then
     echo $git_provider_val
   else
-    echo "Invalid git provider value. Please enter either GITLAB or GITHUB."
+    echo "Invalid git provider value. Please enter either GITLAB or GITHUB or BIBUCKET."
     exit 1
   fi
 }
@@ -619,7 +619,6 @@ if [ "$mode" == "server" ]; then
         encryption_key=$(openssl rand -base64 32)
         git_secret=$(encrypt_git_secret "$encryption_key" "$git_secret")
         docker_enc_params=" --git.secret=$git_secret --encryption_key=$encryption_key"
-        
         
         echo "Use below as Gitlab and Github Webhook secret:"
         echo "$git_secret"
