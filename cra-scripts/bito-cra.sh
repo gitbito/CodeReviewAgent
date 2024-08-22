@@ -51,7 +51,7 @@ validate_git_provider() {
   if [ "$git_provider_val" == "GITLAB" ] || [ "$git_provider_val" == "GITHUB" ] || [ "$git_provider_val" == "BITBUCKET" ]; then
     echo $git_provider_val
   else
-    echo "Invalid git provider value. Please enter either GITLAB or GITHUB or BIBUCKET."
+    echo "Invalid git provider value. Please enter either GITLAB or GITHUB or BITBUCKET."
     exit 1
   fi
 }
@@ -99,6 +99,16 @@ validate_cr_event_type() {
   if [ "$cr_event_type_val" == "manual" ]; then
     cr_event_type=$cr_event_type_val
     echo
+  fi
+}
+
+posting_to_pr="True"
+validate_posting_to_pr() {
+  local boolean_val="$(echo "$1" | awk '{print tolower($0)}')"
+  if [ "$boolean_val" == "true" ]; then
+    posting_to_pr="True"
+  elif [ "$boolean_val" == "false" ]; then
+    posting_to_pr="False"
   fi
 }
 
@@ -156,6 +166,7 @@ display_usage() {
   echo "Usage-2: $0 service start | restart <path-to-properties-file>"
   echo "Usage-3: $0 service stop"
   echo "Usage-4: $0 service status"
+  echo "Usage-5: $0 <path-to-properties-file> pr_url=<url-value>"
 }
 
 check_properties_file() {
@@ -247,6 +258,22 @@ fi
 properties_file=
 action_directory=
 force_mode=
+pr_url_arg=
+
+process_pr_url_or_action_dir_param() {
+  local param="$1"
+
+  if [[ "$param" == pr_url=* ]]; then
+    pr_url_arg="${param#*=}"
+  else
+    action_directory=$(check_action_directory "$param")
+    if [ $? -ne 0 ]; then
+      echo "Action directory not found!"
+      exit 1
+    fi
+  fi
+}
+
 if [ "$#" -gt 1 ]; then
   if [ "$1" == "service" ]; then
     case "$2" in
@@ -319,12 +346,16 @@ if [ "$#" -gt 1 ]; then
 
     # Note down the hidden parameter for action directory
     if [ "$#" -eq 2 ]; then
-      action_directory=$(check_action_directory "$2")
-      if [ $? -ne 0 ]; then
-        echo "Action directory not found!"
-        exit 1
-      fi
-      #echo "Action Diretory: $action_directory"
+      #check if 2nd argument is like pr_url=<value> then extract value else check the action_directory
+      process_pr_url_or_action_dir_param "$2"
+    fi
+
+    if [ "$#" -eq 3 ]; then
+      #check if 2nd argument is like pr_url=<value> then extract value else check the action_directory
+      process_pr_url_or_action_dir_param "$2"
+
+      #check if 3rd argument is like pr_url=<value> then extract value else check the action_directory
+      process_pr_url_or_action_dir_param "$3"
     fi
   fi
 else
@@ -348,6 +379,11 @@ while IFS='=' read -r key value; do
         props["$key"]="$value"
     fi
 done < "$properties_file"
+
+# Override pr_url if provided as an argument
+if [ -n "$pr_url_arg" ]; then
+  props["pr_url"]="$pr_url_arg"
+fi
 
 # Function to ask for missing parameters
 ask_for_param() {
@@ -394,6 +430,7 @@ optional_params_cli=(
   "code_context"
   "nexus_url"
   "cr_event_type"
+  "posting_to_pr"
 )
 
 # Parameters that are required/optional in mode server
@@ -488,7 +525,7 @@ done
 for param in "${optional_params[@]}"; do
   if [ "$param" == "dependency_check.snyk_auth_token" ] && [ "${props["dependency_check"]}" == "True" ]; then
       ask_for_param "$param" "False"
-  elif [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "static_analysis_tool" ] && [ "$param" != "git.domain" ] && [ "$param" != "review_scope" ] && [ "$param" != "exclude_branches" ] && [ "$param" != "nexus_url" ] && [ "$param" != "exclude_files" ] && [ "$param" != "exclude_draft_pr" ] && [ "$param" != "cr_event_type" ]; then
+  elif [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "static_analysis_tool" ] && [ "$param" != "git.domain" ] && [ "$param" != "review_scope" ] && [ "$param" != "exclude_branches" ] && [ "$param" != "nexus_url" ] && [ "$param" != "exclude_files" ] && [ "$param" != "exclude_draft_pr" ] && [ "$param" != "cr_event_type" ] && [ "$param" != "posting_to_pr" ]; then
       ask_for_param "$param" "False"
   fi
 done
@@ -575,6 +612,8 @@ for param in "${required_params[@]}" "${bee_params[@]}" "${optional_params[@]}";
         nexus_url=$(echo "${props[$param]}" | sed 's/^[ \t]*//;s/[ \t]*$//')
     elif [ "$param" == "cr_event_type" ]; then
         validate_cr_event_type "${props[$param]}"
+    elif [ "$param" == "posting_to_pr" ]; then
+        validate_posting_to_pr "${props[$param]}"
     else
         docker_cmd+=" --$param=${props[$param]}"
     fi
@@ -582,6 +621,7 @@ for param in "${required_params[@]}" "${bee_params[@]}" "${optional_params[@]}";
   fi
 done
 docker_cmd+=" --cr_event_type=${cr_event_type}"
+docker_cmd+=" --posting_to_pr=${posting_to_pr}"
 docker_cmd=$docker_init_cmd$docker_cmd
 docker_cmd+=' ${docker_enc_params}'
 

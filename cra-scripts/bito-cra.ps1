@@ -122,6 +122,22 @@ function ValidateCrEventType {
     }
 }
 
+$postingToPr = "True"
+function ValidatePostingToPr {
+    param($boolean_val)
+    # Convert the input to title case (first letter uppercase, rest lowercase)
+    $boolean_val = $boolean_val.Substring(0,1).ToUpper() + $boolean_val.Substring(1).ToLower()
+
+    # Check if the converted value is either "True" or "False"
+    if ($boolean_val -ne "True" -and $boolean_val -ne "False") {
+        return $postingToPr
+    }
+
+    # Return the properly cased boolean value
+    return $boolean_val
+
+}
+
 # Function to display URL using IP address and port
 # Run docker ps -l command and store the output
 function Display-DockerUrl {
@@ -156,6 +172,7 @@ function Display-Usage {
     Write-Host "Usage-2: $PSCommandPrefix service start | restart <path-to-properties-file>"
     Write-Host "Usage-3: $PSCommandPrefix service stop"
     Write-Host "Usage-4: $PSCommandPrefix service status"
+    Write-Host "Usage-5: $PSCommandPrefix <path-to-properties-file> pr_url=<url-value>"
 }
 
 function Check-PropertyFile {
@@ -257,6 +274,18 @@ if ($args.Count -lt 1) {
 $properties_file = $null
 $action_directory = $null
 $force_mode = $null
+$pr_url_arg = $null
+
+function Process-PrUrlOrActionDirParam {
+    param ($func_local_arg)
+
+    if ($func_local_arg -like "pr_url=*") {
+        $pr_url_arg = $arg -replace "pr_url=", ""
+    } else {
+        $action_directory = Check-ActionDirectory $func_local_arg
+    }
+}
+
 if ($args.Count -gt 1) {
     if ($args[0] -eq "service") {
         switch ($args[1]) {
@@ -311,7 +340,15 @@ if ($args.Count -gt 1) {
 
         # Note down the hidden parameter for action directory
         if ($args.Count -eq 2) {
-            $action_directory = Check-ActionDirectory $args[1]
+            #check if 2nd argument is like pr_url=<value> then extract value else check the action_directory
+            Process-PrUrlOrActionDirParam $args[1]
+        }
+
+        if ($args.Count -eq 3) {
+            #check if 2nd argument is like pr_url=<value> then extract value else check the action_directory
+            Process-PrUrlOrActionDirParam $args[1]
+            #check if 3rd argument is like pr_url=<value> then extract value else check the action_directory
+            Process-PrUrlOrActionDirParam $args[2]
         }
     }
 }
@@ -332,6 +369,11 @@ Get-Content $properties_file | ForEach-Object {
         $key, $value = $line -split '=', 2
         $props[$key.Trim()] = $value.Trim()
     }
+}
+
+# Override pr_url if provided as an argument
+if ($pr_url_arg) {
+    $props["pr_url"] = $pr_url_arg
 }
 
 # Function to ask for missing parameters
@@ -377,6 +419,7 @@ $optional_params_cli = @(
     "git.domain"
     "code_context"
     "cr_event_type"
+    "posting_to_pr"
 )
 
 # Parameters that are required/optional in mode server
@@ -473,7 +516,7 @@ foreach ($param in $required_params) {
 foreach ($param in $optional_params) {
     if ($param -eq "dependency_check.snyk_auth_token" -and $props["dependency_check"] -eq "True") {
         Ask-For-Param $param $false
-    } elseif ($param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "static_analysis_tool" -and $param -ne "git.domain" -and $param -ne "review_scope" -and $param -ne "exclude_branches" -and $param -ne "exclude_files" -and $param -ne "exclude_draft_pr" -and $param -ne "cr_event_type") {
+    } elseif ($param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "static_analysis_tool" -and $param -ne "git.domain" -and $param -ne "review_scope" -and $param -ne "exclude_branches" -and $param -ne "exclude_files" -and $param -ne "exclude_draft_pr" -and $param -ne "cr_event_type" -and $param -ne "posting_to_pr") {
         Ask-For-Param $param $false
     }
 }
@@ -540,12 +583,16 @@ foreach ($param in $required_params + $bee_params + $optional_params) {
             $docker_cmd += " --$param=$review_comments"
         } elseif ($param -eq "cr_event_type") {
             $crEventType = ValidateCrEventType $props[$param]
-        } else {
+        } elseif ($param -eq "posting_to_pr") {
+            $postingToPr = ValidatePostingToPr $props[$param]
+        }
+        else {
             $docker_cmd += " --$param=$($props[$param])"
         }
     }
 }
 $docker_cmd += " --cr_event_type=$crEventType"
+$docker_cmd += " --posting_to_pr=$postingToPr"
 $docker_cmd = $docker_init_cmd + $docker_cmd
 
 function Encrypt-GitSecret {
