@@ -13,7 +13,6 @@
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
 
 <!-- PROJECT LOGO -->
 <br />
@@ -229,5 +228,3 @@ Feel free to reach out to us via email at: **[support@bito.ai](mailto:support@bi
 [issues-url]: https://github.com/gitbito/CodeReviewAgent/issues
 [license-shield]: https://img.shields.io/github/license/gitbito/CodeReviewAgent.svg?style=for-the-badge
 [license-url]: https://github.com/gitbito/CodeReviewAgent?tab=MIT-1-ov-file#readme
-[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://www.linkedin.com/company/bitodev/
