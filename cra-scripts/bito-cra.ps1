@@ -87,8 +87,8 @@ function Validate-Mode {
 function Validate-Env {
     param($env_val)
 
-    if ($env_val -ne "prod" -and $env_val -ne "staging") {
-      Write-Host "Invalid env value. Please enter either prod or staging."
+    if ($env_val -ne "prod" -and $env_val -ne "staging" -and $env_val -ne "preprod") {
+      Write-Host "Invalid env value. Please enter either prod or staging or preprod."
       exit 1
     }
 }
@@ -420,6 +420,12 @@ $optional_params_cli = @(
     "code_context"
     "cr_event_type"
     "posting_to_pr"
+    "custom_rules.configured_ws_ids"
+    "custom_rules.aws_access_key_id"
+    "custom_rules.aws_secret_access_key"
+    "custom_rules.region_name"
+    "custom_rules.bucket_name"
+    "custom_rules.aes_key"
 )
 
 # Parameters that are required/optional in mode server
@@ -448,6 +454,12 @@ $optional_params_server = @(
     "git.domain"
     "code_context"
     "cr_event_type"
+    "custom_rules.configured_ws_ids"
+    "custom_rules.aws_access_key_id"
+    "custom_rules.aws_secret_access_key"
+    "custom_rules.region_name"
+    "custom_rules.bucket_name"
+    "custom_rules.aes_key"
 )
 
 $bee_params = @(

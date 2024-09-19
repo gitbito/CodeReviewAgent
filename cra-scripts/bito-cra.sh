@@ -84,11 +84,11 @@ validate_mode() {
 # Function to validate a env value i.e. prod or staging
 validate_env() {
   local env="$1"
-  if [ "$env" == "prod" ] || [ "$env" == "staging" ]; then
+  if [ "$env" == "prod" ] || [ "$env" == "staging" ] || [ "$env" == "preprod" ]; then
     #echo "Valid mode value"
     echo
   else
-    echo "Invalid mode value. Please enter either prod or staging."
+    echo "Invalid mode value. Please enter either prod or staging or preprod."
     exit 1
   fi
 }
@@ -431,6 +431,12 @@ optional_params_cli=(
   "nexus_url"
   "cr_event_type"
   "posting_to_pr"
+  "custom_rules.configured_ws_ids"
+  "custom_rules.aws_access_key_id"
+  "custom_rules.aws_secret_access_key"
+  "custom_rules.region_name"
+  "custom_rules.bucket_name"
+  "custom_rules.aes_key"
 )
 
 # Parameters that are required/optional in mode server
@@ -460,6 +466,12 @@ optional_params_server=(
   "code_context"
   "nexus_url"
   "cr_event_type"
+  "custom_rules.configured_ws_ids"
+  "custom_rules.aws_access_key_id"
+  "custom_rules.aws_secret_access_key"
+  "custom_rules.region_name"
+  "custom_rules.bucket_name"
+  "custom_rules.aes_key"
 )
 
 bee_params=(
