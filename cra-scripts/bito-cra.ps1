@@ -528,7 +528,7 @@ foreach ($param in $required_params) {
 foreach ($param in $optional_params) {
     if ($param -eq "dependency_check.snyk_auth_token" -and $props["dependency_check"] -eq "True") {
         Ask-For-Param $param $false
-    } elseif ($param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "static_analysis_tool" -and $param -ne "git.domain" -and $param -ne "review_scope" -and $param -ne "exclude_branches" -and $param -ne "exclude_files" -and $param -ne "exclude_draft_pr" -and $param -ne "cr_event_type" -and $param -ne "posting_to_pr") {
+    } elseif ($param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "static_analysis_tool" -and $param -ne "git.domain" -and $param -ne "review_scope" -and $param -ne "exclude_branches" -and $param -ne "exclude_files" -and $param -ne "exclude_draft_pr" -and $param -ne "cr_event_type" -and $param -ne "posting_to_pr" -and $param -ne "custom_rules.configured_ws_ids"  -and  $param -ne "custom_rules.aws_access_key_id"  -and  $param -ne "custom_rules.aws_secret_access_key"  -and  $param -ne "custom_rules.region_name"  -and  $param -ne "custom_rules.bucket_name"  -and  $param -ne "custom_rules.aes_key") {
         Ask-For-Param $param $false
     }
 }
