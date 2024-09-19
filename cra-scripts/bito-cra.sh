@@ -537,7 +537,7 @@ done
 for param in "${optional_params[@]}"; do
   if [ "$param" == "dependency_check.snyk_auth_token" ] && [ "${props["dependency_check"]}" == "True" ]; then
       ask_for_param "$param" "False"
-  elif [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "static_analysis_tool" ] && [ "$param" != "git.domain" ] && [ "$param" != "review_scope" ] && [ "$param" != "exclude_branches" ] && [ "$param" != "nexus_url" ] && [ "$param" != "exclude_files" ] && [ "$param" != "exclude_draft_pr" ] && [ "$param" != "cr_event_type" ] && [ "$param" != "posting_to_pr" ]; then
+  elif [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "static_analysis_tool" ] && [ "$param" != "git.domain" ] && [ "$param" != "review_scope" ] && [ "$param" != "exclude_branches" ] && [ "$param" != "nexus_url" ] && [ "$param" != "exclude_files" ] && [ "$param" != "exclude_draft_pr" ] && [ "$param" != "cr_event_type" ] && [ "$param" != "posting_to_pr" ] && [ "$param" != "custom_rules.configured_ws_ids" ] && [ "$param" != "custom_rules.aws_access_key_id" ] && [ "$param" != "custom_rules.aws_secret_access_key" ] && [ "$param" != "custom_rules.region_name" ] && [ "$param" != "custom_rules.bucket_name" ] && [ "$param" != "custom_rules.aes_key" ]; then
       ask_for_param "$param" "False"
   fi
 done
