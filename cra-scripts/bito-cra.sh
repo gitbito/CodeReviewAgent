@@ -220,7 +220,7 @@ check_output_directory() {
     echo "output path directory not found!"
     return 1
   else
-    echo $output_path
+    echo "Output Path: $output_path"
     return 0
   fi
 }
@@ -416,6 +416,7 @@ optional_params_cli=(
   "review_comments"
   "static_analysis"
   "static_analysis_tool"
+  "linters_feedback"
   "review_scope"
   "exclude_branches"
   "exclude_files"
@@ -452,6 +453,7 @@ optional_params_server=(
   "review_comments"
   "static_analysis"
   "static_analysis_tool"
+  "linters_feedback"
   "review_scope"
   "exclude_branches"
   "exclude_files"
@@ -472,6 +474,7 @@ optional_params_server=(
   "custom_rules.region_name"
   "custom_rules.bucket_name"
   "custom_rules.aes_key"
+  "output_path"
 )
 
 bee_params=(
@@ -537,7 +540,7 @@ done
 for param in "${optional_params[@]}"; do
   if [ "$param" == "dependency_check.snyk_auth_token" ] && [ "${props["dependency_check"]}" == "True" ]; then
       ask_for_param "$param" "False"
-  elif [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "static_analysis_tool" ] && [ "$param" != "git.domain" ] && [ "$param" != "review_scope" ] && [ "$param" != "exclude_branches" ] && [ "$param" != "nexus_url" ] && [ "$param" != "exclude_files" ] && [ "$param" != "exclude_draft_pr" ] && [ "$param" != "cr_event_type" ] && [ "$param" != "posting_to_pr" ] && [ "$param" != "custom_rules.configured_ws_ids" ] && [ "$param" != "custom_rules.aws_access_key_id" ] && [ "$param" != "custom_rules.aws_secret_access_key" ] && [ "$param" != "custom_rules.region_name" ] && [ "$param" != "custom_rules.bucket_name" ] && [ "$param" != "custom_rules.aes_key" ]; then
+  elif [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "static_analysis_tool" ]  && [ "$param" != "linters_feedback" ] && [ "$param" != "git.domain" ] && [ "$param" != "review_scope" ] && [ "$param" != "exclude_branches" ] && [ "$param" != "nexus_url" ] && [ "$param" != "exclude_files" ] && [ "$param" != "exclude_draft_pr" ] && [ "$param" != "cr_event_type" ] && [ "$param" != "posting_to_pr" ] && [ "$param" != "custom_rules.configured_ws_ids" ] && [ "$param" != "custom_rules.aws_access_key_id" ] && [ "$param" != "custom_rules.aws_secret_access_key" ] && [ "$param" != "custom_rules.region_name" ] && [ "$param" != "custom_rules.bucket_name" ] && [ "$param" != "custom_rules.aes_key" ] && [ "$param" != "code_context_config.partial_timeout" ] && [ "$param" != "code_context_config.max_depth" ] && [ "$param" != "code_context_config.kill_timeout_sec" ]; then
       ask_for_param "$param" "False"
   fi
 done
@@ -569,6 +572,9 @@ for param in "${required_params[@]}" "${bee_params[@]}" "${optional_params[@]}";
         docker_cmd+=" --static_analysis.fb_infer.enabled=${props[$param]}"
     elif [ "$param" == "static_analysis_tool" ]; then
         docker_cmd+=" --static_analysis_tool=${props[$param]}"
+    elif [ "$param" == "linters_feedback" ]; then
+        props[$param]=$(validate_boolean "${props[$param]}")
+        docker_cmd+=" --linters_feedback=${props[$param]}"
     elif [ "$param" == "review_scope" ]; then
         scopes=$(echo ${props[$param]} | sed 's/, */,/g')
         docker_cmd+=" --review_scope='[$scopes]'"
