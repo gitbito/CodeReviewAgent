@@ -443,7 +443,7 @@ $optional_params_server = @(
     "review_comments",
     "static_analysis",
     "static_analysis_tool",
-    "linters_feedback"
+    "linters_feedback",
     "review_scope",
     "exclude_branches",
     "exclude_files",
