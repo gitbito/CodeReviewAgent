@@ -417,6 +417,7 @@ optional_params_cli=(
   "static_analysis"
   "static_analysis_tool"
   "linters_feedback"
+  "secret_scanner_feedback"
   "review_scope"
   "exclude_branches"
   "exclude_files"
@@ -454,6 +455,7 @@ optional_params_server=(
   "static_analysis"
   "static_analysis_tool"
   "linters_feedback"
+  "secret_scanner_feedback"
   "review_scope"
   "exclude_branches"
   "exclude_files"
@@ -540,7 +542,7 @@ done
 for param in "${optional_params[@]}"; do
   if [ "$param" == "dependency_check.snyk_auth_token" ] && [ "${props["dependency_check"]}" == "True" ]; then
       ask_for_param "$param" "False"
-  elif [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "static_analysis_tool" ]  && [ "$param" != "linters_feedback" ] && [ "$param" != "git.domain" ] && [ "$param" != "review_scope" ] && [ "$param" != "exclude_branches" ] && [ "$param" != "nexus_url" ] && [ "$param" != "exclude_files" ] && [ "$param" != "exclude_draft_pr" ] && [ "$param" != "cr_event_type" ] && [ "$param" != "posting_to_pr" ] && [ "$param" != "custom_rules.configured_ws_ids" ] && [ "$param" != "custom_rules.aws_access_key_id" ] && [ "$param" != "custom_rules.aws_secret_access_key" ] && [ "$param" != "custom_rules.region_name" ] && [ "$param" != "custom_rules.bucket_name" ] && [ "$param" != "custom_rules.aes_key" ] && [ "$param" != "code_context_config.partial_timeout" ] && [ "$param" != "code_context_config.max_depth" ] && [ "$param" != "code_context_config.kill_timeout_sec" ]; then
+  elif [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "static_analysis_tool" ]  && [ "$param" != "linters_feedback" ] && [ "$param" != "secret_scanner_feedback" ] && [ "$param" != "git.domain" ] && [ "$param" != "review_scope" ] && [ "$param" != "exclude_branches" ] && [ "$param" != "nexus_url" ] && [ "$param" != "exclude_files" ] && [ "$param" != "exclude_draft_pr" ] && [ "$param" != "cr_event_type" ] && [ "$param" != "posting_to_pr" ] && [ "$param" != "custom_rules.configured_ws_ids" ] && [ "$param" != "custom_rules.aws_access_key_id" ] && [ "$param" != "custom_rules.aws_secret_access_key" ] && [ "$param" != "custom_rules.region_name" ] && [ "$param" != "custom_rules.bucket_name" ] && [ "$param" != "custom_rules.aes_key" ] && [ "$param" != "code_context_config.partial_timeout" ] && [ "$param" != "code_context_config.max_depth" ] && [ "$param" != "code_context_config.kill_timeout_sec" ]; then
       ask_for_param "$param" "False"
   fi
 done
@@ -575,6 +577,9 @@ for param in "${required_params[@]}" "${bee_params[@]}" "${optional_params[@]}";
     elif [ "$param" == "linters_feedback" ]; then
         props[$param]=$(validate_boolean "${props[$param]}")
         docker_cmd+=" --linters_feedback=${props[$param]}"
+    elif [ "$param" == "secret_scanner_feedback" ]; then
+        props[$param]=$(validate_boolean "${props[$param]}")
+        docker_cmd+=" --secret_scanner_feedback=${props[$param]}"
     elif [ "$param" == "review_scope" ]; then
         scopes=$(echo ${props[$param]} | sed 's/, */,/g')
         docker_cmd+=" --review_scope='[$scopes]'"
