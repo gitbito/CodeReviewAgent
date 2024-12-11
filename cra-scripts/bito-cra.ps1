@@ -404,12 +404,14 @@ $required_params_cli = @(
 )
 
 $optional_params_cli = @(
+    "acceptable_suggestions_enabled",
     "review_comments",
     "static_analysis",
     "static_analysis_tool",
     "linters_feedback",
     "secret_scanner_feedback",
     "review_scope",
+    "enable_default_branch",
     "exclude_branches",
     "exclude_files",
     "exclude_draft_pr",
@@ -438,6 +440,7 @@ $required_params_server = @(
 )
 
 $optional_params_server = @(
+    "acceptable_suggestions_enabled",
     "git.provider",
     "git.access_token",
     "bito_cli.bito.access_key",
@@ -447,6 +450,7 @@ $optional_params_server = @(
     "linters_feedback",
     "secret_scanner_feedback",
     "review_scope",
+    "enable_default_branch",
     "exclude_branches",
     "exclude_files",
     "exclude_draft_pr",
@@ -534,7 +538,7 @@ foreach ($param in $required_params) {
 foreach ($param in $optional_params) {
     if ($param -eq "dependency_check.snyk_auth_token" -and $props["dependency_check"] -eq "True") {
         Ask-For-Param $param $false
-    } elseif ($param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "static_analysis_tool" -and $param -ne "linters_feedback" -and $param -ne "secret_scanner_feedback" -and $param -ne "git.domain" -and $param -ne "review_scope" -and $param -ne "exclude_branches" -and $param -ne "exclude_files" -and $param -ne "exclude_draft_pr" -and $param -ne "cr_event_type" -and $param -ne "posting_to_pr" -and $param -ne "custom_rules.configured_ws_ids"  -and  $param -ne "custom_rules.aws_access_key_id"  -and  $param -ne "custom_rules.aws_secret_access_key"  -and  $param -ne "custom_rules.region_name"  -and  $param -ne "custom_rules.bucket_name"  -and  $param -ne "custom_rules.aes_key"  -and  $param -ne "code_context_config.partial_timeout"  -and  $param -ne "code_context_config.max_depth"  -and  $param -ne "code_context_config.kill_timeout_sec") {
+    } elseif ($param -ne "acceptable_suggestions_enabled" -and $param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "static_analysis_tool" -and $param -ne "linters_feedback" -and $param -ne "secret_scanner_feedback" -and $param -ne "enable_default_branch" -and $param -ne "git.domain" -and $param -ne "review_scope" -and $param -ne "exclude_branches" -and $param -ne "exclude_files" -and $param -ne "exclude_draft_pr" -and $param -ne "cr_event_type" -and $param -ne "posting_to_pr" -and $param -ne "custom_rules.configured_ws_ids"  -and  $param -ne "custom_rules.aws_access_key_id"  -and  $param -ne "custom_rules.aws_secret_access_key"  -and  $param -ne "custom_rules.region_name"  -and  $param -ne "custom_rules.bucket_name"  -and  $param -ne "custom_rules.aes_key"  -and  $param -ne "code_context_config.partial_timeout"  -and  $param -ne "code_context_config.max_depth"  -and  $param -ne "code_context_config.kill_timeout_sec") {
         Ask-For-Param $param $false
     }
 }
@@ -566,9 +570,15 @@ foreach ($param in $required_params + $bee_params + $optional_params) {
         } elseif ($param -eq "secret_scanner_feedback") {
             $validated_boolean = Validate-Boolean $props[$param]
             $docker_cmd += " --$param=$validated_boolean"
+        } elseif ($param -eq "acceptable_suggestions_enabled") {
+            $validated_boolean = Validate-Boolean $props[$param]
+            $docker_cmd += " --$param=$validated_boolean"
         } elseif ($param -eq "review_scope") {
             $scopes = $($props[$param]) -replace ',\s*', ','
             $docker_cmd += " --$param='[$scopes]'"
+        } elseif ($param -eq "enable_default_branch") {
+            $validated_boolean = Validate-Boolean $props[$param]
+            $docker_cmd += " --$param=$validated_boolean"
         } elseif ($param -eq "exclude_branches") {
             $docker_cmd += " --exclude_branches='$($props[$param])'"
         } elseif ($param -eq "exclude_files") {
