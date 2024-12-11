@@ -413,12 +413,14 @@ required_params_cli=(
 )
 
 optional_params_cli=(
+  "acceptable_suggestions_enabled"
   "review_comments"
   "static_analysis"
   "static_analysis_tool"
   "linters_feedback"
   "secret_scanner_feedback"
   "review_scope"
+  "enable_default_branch"
   "exclude_branches"
   "exclude_files"
   "exclude_draft_pr"
@@ -451,12 +453,14 @@ optional_params_server=(
   "git.provider"
   "git.access_token"
   "bito_cli.bito.access_key"
+  "acceptable_suggestions_enabled"
   "review_comments"
   "static_analysis"
   "static_analysis_tool"
   "linters_feedback"
   "secret_scanner_feedback"
   "review_scope"
+  "enable_default_branch"
   "exclude_branches"
   "exclude_files"
   "exclude_draft_pr"
@@ -542,7 +546,7 @@ done
 for param in "${optional_params[@]}"; do
   if [ "$param" == "dependency_check.snyk_auth_token" ] && [ "${props["dependency_check"]}" == "True" ]; then
       ask_for_param "$param" "False"
-  elif [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "static_analysis_tool" ]  && [ "$param" != "linters_feedback" ] && [ "$param" != "secret_scanner_feedback" ] && [ "$param" != "git.domain" ] && [ "$param" != "review_scope" ] && [ "$param" != "exclude_branches" ] && [ "$param" != "nexus_url" ] && [ "$param" != "exclude_files" ] && [ "$param" != "exclude_draft_pr" ] && [ "$param" != "cr_event_type" ] && [ "$param" != "posting_to_pr" ] && [ "$param" != "custom_rules.configured_ws_ids" ] && [ "$param" != "custom_rules.aws_access_key_id" ] && [ "$param" != "custom_rules.aws_secret_access_key" ] && [ "$param" != "custom_rules.region_name" ] && [ "$param" != "custom_rules.bucket_name" ] && [ "$param" != "custom_rules.aes_key" ] && [ "$param" != "code_context_config.partial_timeout" ] && [ "$param" != "code_context_config.max_depth" ] && [ "$param" != "code_context_config.kill_timeout_sec" ]; then
+  elif [ "$param" != "acceptable_suggestions_enabled" ] && [ "$param" != "dependency_check.snyk_auth_token" ] && [ "$param" != "env" ] && [ "$param" != "cli_path" ] && [ "$param" != "output_path" ] && [ "$param" != "static_analysis_tool" ]  && [ "$param" != "linters_feedback" ] && [ "$param" != "secret_scanner_feedback" ] && [ "$param" != "enable_default_branch" ] && [ "$param" != "git.domain" ] && [ "$param" != "review_scope" ] && [ "$param" != "exclude_branches" ] && [ "$param" != "nexus_url" ] && [ "$param" != "exclude_files" ] && [ "$param" != "exclude_draft_pr" ] && [ "$param" != "cr_event_type" ] && [ "$param" != "posting_to_pr" ] && [ "$param" != "custom_rules.configured_ws_ids" ] && [ "$param" != "custom_rules.aws_access_key_id" ] && [ "$param" != "custom_rules.aws_secret_access_key" ] && [ "$param" != "custom_rules.region_name" ] && [ "$param" != "custom_rules.bucket_name" ] && [ "$param" != "custom_rules.aes_key" ] && [ "$param" != "code_context_config.partial_timeout" ] && [ "$param" != "code_context_config.max_depth" ] && [ "$param" != "code_context_config.kill_timeout_sec" ]; then
       ask_for_param "$param" "False"
   fi
 done
@@ -580,9 +584,15 @@ for param in "${required_params[@]}" "${bee_params[@]}" "${optional_params[@]}";
     elif [ "$param" == "secret_scanner_feedback" ]; then
         props[$param]=$(validate_boolean "${props[$param]}")
         docker_cmd+=" --secret_scanner_feedback=${props[$param]}"
+    elif [ "$param" == "acceptable_suggestions_enabled" ]; then
+        props[$param]=$(validate_boolean "${props[$param]}")
+        docker_cmd+=" --acceptable_suggestions_enabled=${props[$param]}"
     elif [ "$param" == "review_scope" ]; then
         scopes=$(echo ${props[$param]} | sed 's/, */,/g')
         docker_cmd+=" --review_scope='[$scopes]'"
+    elif [ "$param" == "enable_default_branch" ]; then
+        props[$param]=$(validate_boolean "${props[$param]}")
+        docker_cmd+=" --enable_default_branch=${props[$param]}"
     elif [ "$param" == "exclude_branches" ]; then
         docker_cmd+=" --exclude_branches='${props[$param]}'"
     elif [ "$param" == "exclude_files" ]; then
