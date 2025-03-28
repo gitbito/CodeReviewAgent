@@ -413,6 +413,7 @@ $optional_params_cli = @(
     "review_scope",
     "enable_default_branch",
     "exclude_branches",
+    "include_branches",
     "exclude_files",
     "exclude_draft_pr",
     "dependency_check",
@@ -581,6 +582,8 @@ foreach ($param in $required_params + $bee_params + $optional_params) {
             $docker_cmd += " --$param=$validated_boolean"
         } elseif ($param -eq "exclude_branches") {
             $docker_cmd += " --exclude_branches='$($props[$param])'"
+        } elseif ($param -eq "include_branches") {
+            $docker_cmd += " --include_branches='$($props[$param])'"
         } elseif ($param -eq "exclude_files") {
             $docker_cmd += " --exclude_files='$($props[$param])'"
         } elseif ($param -eq "exclude_draft_pr") {
