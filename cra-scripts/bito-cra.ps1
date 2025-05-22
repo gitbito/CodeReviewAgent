@@ -404,6 +404,7 @@ $required_params_cli = @(
 )
 
 $optional_params_cli = @(
+    "agentic_cra_enabled",
     "acceptable_suggestions_enabled",
     "review_comments",
     "static_analysis",
@@ -442,6 +443,7 @@ $required_params_server = @(
 )
 
 $optional_params_server = @(
+    "agentic_cra_enabled",
     "acceptable_suggestions_enabled",
     "git.provider",
     "git.access_token",
@@ -542,7 +544,7 @@ foreach ($param in $required_params) {
 foreach ($param in $optional_params) {
     if ($param -eq "dependency_check.snyk_auth_token" -and $props["dependency_check"] -eq "True") {
         Ask-For-Param $param $false
-    } elseif ($param -ne "acceptable_suggestions_enabled" -and $param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "static_analysis_tool" -and $param -ne "linters_feedback" -and $param -ne "secret_scanner_feedback" -and $param -ne "enable_default_branch" -and $param -ne "git.domain" -and $param -ne "review_scope" -and $param -ne "exclude_branches" -and $param -ne "include_source_branches" -and $param -ne "include_target_branches" -and $param -ne "exclude_files" -and $param -ne "exclude_draft_pr" -and $param -ne "cr_event_type" -and $param -ne "posting_to_pr" -and $param -ne "custom_rules.configured_ws_ids"  -and  $param -ne "custom_rules.aws_access_key_id"  -and  $param -ne "custom_rules.aws_secret_access_key"  -and  $param -ne "custom_rules.region_name"  -and  $param -ne "custom_rules.bucket_name"  -and  $param -ne "custom_rules.aes_key"  -and  $param -ne "code_context_config.partial_timeout"  -and  $param -ne "code_context_config.max_depth"  -and  $param -ne "code_context_config.kill_timeout_sec") {
+    } elseif ($param -ne "agentic_cra_enabled" -and $param -ne "acceptable_suggestions_enabled" -and $param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "static_analysis_tool" -and $param -ne "linters_feedback" -and $param -ne "secret_scanner_feedback" -and $param -ne "enable_default_branch" -and $param -ne "git.domain" -and $param -ne "review_scope" -and $param -ne "exclude_branches" -and $param -ne "include_source_branches" -and $param -ne "include_target_branches" -and $param -ne "exclude_files" -and $param -ne "exclude_draft_pr" -and $param -ne "cr_event_type" -and $param -ne "posting_to_pr" -and $param -ne "custom_rules.configured_ws_ids"  -and  $param -ne "custom_rules.aws_access_key_id"  -and  $param -ne "custom_rules.aws_secret_access_key"  -and  $param -ne "custom_rules.region_name"  -and  $param -ne "custom_rules.bucket_name"  -and  $param -ne "custom_rules.aes_key"  -and  $param -ne "code_context_config.partial_timeout"  -and  $param -ne "code_context_config.max_depth"  -and  $param -ne "code_context_config.kill_timeout_sec") {
         Ask-For-Param $param $false
     }
 }
@@ -593,6 +595,8 @@ foreach ($param in $required_params + $bee_params + $optional_params) {
             $docker_cmd += " --exclude_files='$($props[$param])'"
         } elseif ($param -eq "exclude_draft_pr") {
             $docker_cmd += " --exclude_draft_pr=$($props[$param])"
+        } elseif ($param -eq "agentic_cra_enabled") {
+            $docker_cmd += " --agentic_cra_enabled=$($props[$param])"
         } elseif ($param -eq "dependency_check") {
             $validated_boolean = Validate-Boolean $props[$param]
             $docker_cmd += " --dependency_check.enabled=$validated_boolean"
