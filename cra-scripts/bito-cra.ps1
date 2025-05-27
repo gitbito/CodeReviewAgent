@@ -74,6 +74,19 @@ function Validate-Boolean {
     return $boolean_val
 }
 
+# Function to set default suggestion mode
+function Validate-Suggestion-Mode {
+    param($suggestion_mode)
+    # Convert the input to lowercase
+    $suggestion_mode = $suggestion_mode.ToLower()
+
+    if ($suggestion_mode -eq "comprehensive") {
+        return $suggestion_mode
+    }
+
+    return "essential"
+}
+
 # Function to validate a mode value i.e. cli or server
 function Validate-Mode {
     param($mode_val)
@@ -414,7 +427,10 @@ $optional_params_cli = @(
     "enable_default_branch",
     "exclude_branches",
     "include_source_branches",
-    "include_target_branches",
+    "include_target_branches"
+    "post_as_request_changes",
+    "suggestion_mode",
+    "locale",
     "exclude_files",
     "exclude_draft_pr",
     "dependency_check",
@@ -433,6 +449,7 @@ $optional_params_cli = @(
     "custom_rules.region_name"
     "custom_rules.bucket_name"
     "custom_rules.aes_key"
+    "support_email"
 )
 
 # Parameters that are required/optional in mode server
@@ -456,6 +473,9 @@ $optional_params_server = @(
     "exclude_branches",
     "include_source_branches",
     "include_target_branches",
+    "post_as_request_changes",
+    "suggestion_mode",
+    "locale",
     "exclude_files",
     "exclude_draft_pr",
     "dependency_check",
@@ -474,6 +494,7 @@ $optional_params_server = @(
     "custom_rules.bucket_name"
     "custom_rules.aes_key"
     "output_path"
+    "support_email"
 )
 
 $bee_params = @(
@@ -542,7 +563,7 @@ foreach ($param in $required_params) {
 foreach ($param in $optional_params) {
     if ($param -eq "dependency_check.snyk_auth_token" -and $props["dependency_check"] -eq "True") {
         Ask-For-Param $param $false
-    } elseif ($param -ne "acceptable_suggestions_enabled" -and $param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "static_analysis_tool" -and $param -ne "linters_feedback" -and $param -ne "secret_scanner_feedback" -and $param -ne "enable_default_branch" -and $param -ne "git.domain" -and $param -ne "review_scope" -and $param -ne "exclude_branches" -and $param -ne "include_source_branches" -and $param -ne "include_target_branches" -and $param -ne "exclude_files" -and $param -ne "exclude_draft_pr" -and $param -ne "cr_event_type" -and $param -ne "posting_to_pr" -and $param -ne "custom_rules.configured_ws_ids"  -and  $param -ne "custom_rules.aws_access_key_id"  -and  $param -ne "custom_rules.aws_secret_access_key"  -and  $param -ne "custom_rules.region_name"  -and  $param -ne "custom_rules.bucket_name"  -and  $param -ne "custom_rules.aes_key"  -and  $param -ne "code_context_config.partial_timeout"  -and  $param -ne "code_context_config.max_depth"  -and  $param -ne "code_context_config.kill_timeout_sec") {
+    } elseif ($param -ne "acceptable_suggestions_enabled" -and $param -ne "dependency_check.snyk_auth_token" -and $param -ne "env" -and $param -ne "cli_path" -and $param -ne "output_path" -and $param -ne "static_analysis_tool" -and $param -ne "linters_feedback" -and $param -ne "secret_scanner_feedback" -and $param -ne "enable_default_branch" -and $param -ne "git.domain" -and $param -ne "review_scope" -and $param -ne "exclude_branches" -and $param -ne "include_source_branches" -and $param -ne "include_target_branches" -and $param -ne "suggestion_mode" -and $param -ne "locale" -and $param -ne "exclude_files" -and $param -ne "exclude_draft_pr" -and $param -ne "cr_event_type" -and $param -ne "posting_to_pr" -and $param -ne "custom_rules.configured_ws_ids"  -and  $param -ne "custom_rules.aws_access_key_id"  -and  $param -ne "custom_rules.aws_secret_access_key"  -and  $param -ne "custom_rules.region_name"  -and  $param -ne "custom_rules.bucket_name"  -and  $param -ne "custom_rules.aes_key"  -and  $param -ne "code_context_config.partial_timeout"  -and  $param -ne "code_context_config.max_depth"  -and  $param -ne "code_context_config.kill_timeout_sec" -and $param -ne "support_email" -and $param -ne "post_as_request_changes") {
         Ask-For-Param $param $false
     }
 }
@@ -571,6 +592,9 @@ foreach ($param in $required_params + $bee_params + $optional_params) {
         } elseif ($param -eq "linters_feedback") {
             $validated_boolean = Validate-Boolean $props[$param]
             $docker_cmd += " --$param=$validated_boolean"
+        } elseif ($param -eq "post_as_request_changes") {
+            $validated_boolean = Validate-Boolean $props[$param]
+            $docker_cmd += " --$param=$validated_boolean"
         } elseif ($param -eq "secret_scanner_feedback") {
             $validated_boolean = Validate-Boolean $props[$param]
             $docker_cmd += " --$param=$validated_boolean"
@@ -589,6 +613,11 @@ foreach ($param in $required_params + $bee_params + $optional_params) {
             $docker_cmd += " --include_source_branches='$($props[$param])'"
         } elseif ($param -eq "include_target_branches") {
             $docker_cmd += " --include_target_branches='$($props[$param])'"
+        } elseif ($param -eq "suggestion_mode") {
+            $validated_suggestion_mode = Validate-Suggestion-Mode $props[$param]
+            $docker_cmd += " --suggestion_mode='$validated_suggestion_mode'"
+        } elseif ($param -eq "locale") {
+            $docker_cmd += " --locale='$($props[$param])'"
         } elseif ($param -eq "exclude_files") {
             $docker_cmd += " --exclude_files='$($props[$param])'"
         } elseif ($param -eq "exclude_draft_pr") {
@@ -627,8 +656,9 @@ foreach ($param in $required_params + $bee_params + $optional_params) {
             $crEventType = ValidateCrEventType $props[$param]
         } elseif ($param -eq "posting_to_pr") {
             $postingToPr = ValidatePostingToPr $props[$param]
-        }
-        else {
+        } elseif ($param -eq "support_email") {
+            $docker_cmd += " --support_email='$( $props[$param] )'"
+        } else {
             $docker_cmd += " --$param=$($props[$param])"
         }
     }
