@@ -49,7 +49,7 @@ function Validate-GitProvider {
     $git_provider_val = $git_provider_val.ToUpper()
 
     # Check if the converted value is either "GITLAB" or "GITHUB" or "BITBUCKET"
-    if ($git_provider_val -ne "GITLAB" -and $git_provider_val -ne "GITHUB" -and $git_provider_val -ne "BITBUCKET" and $git_provider_val -ne "BITBUCKET-ENTERPRISE") {
+    if ($git_provider_val -ne "GITLAB" -and $git_provider_val -ne "GITHUB" -and $git_provider_val -ne "BITBUCKET" -and $git_provider_val -ne "BITBUCKET-ENTERPRISE") {
         Write-Host "Invalid git provider value. Please enter either GITLAB or GITHUB or BITBUCKET or BITBUCKET-ENTERPRISE."
         exit 1
     }
