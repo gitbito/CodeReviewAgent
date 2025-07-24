@@ -48,10 +48,10 @@ validate_url() {
 validate_git_provider() {
   local git_provider_val=$(echo "$1" | tr '[:lower:]' '[:upper:]')
 
-  if [ "$git_provider_val" == "GITLAB" ] || [ "$git_provider_val" == "GITHUB" ] || [ "$git_provider_val" == "BITBUCKET" ] || [ "$git_provider_val" == "BITBUCKET-ENTERPRISE" ]; then
+  if [ "$git_provider_val" == "GITLAB" ] || [ "$git_provider_val" == "GITHUB" ] || [ "$git_provider_val" == "BITBUCKET" ]; then
     echo $git_provider_val
   else
-    echo "Invalid git provider value. Please enter either GITLAB or GITHUB or BITBUCKET or BITBUCKET-ENTERPRISE."
+    echo "Invalid git provider value. Please enter either GITLAB or GITHUB or BITBUCKET."
     exit 1
   fi
 }
@@ -725,7 +725,7 @@ param_git_provider="git.provider"
 docker_enc_params=
 if [ "$mode" == "server" ]; then
     if [ -n "${props[$param_bito_access_key]}" ] && [ -n "${props[$param_git_access_token]}" ]; then
-        if [[ "${props[$param_git_provider]}" == "BITBUCKET" || "${props[$param_git_provider]}" == "BITBUCKET-ENTERPRISE" ]]; then
+        if [[ "${props[$param_git_provider]}" == "BITBUCKET" ]]; then
           git_secret="${props[$param_git_access_token]}"
         else
           git_secret="${props[$param_bito_access_key]}@#~^${props[$param_git_access_token]}"
