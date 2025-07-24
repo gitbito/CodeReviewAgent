@@ -48,10 +48,10 @@ validate_url() {
 validate_git_provider() {
   local git_provider_val=$(echo "$1" | tr '[:lower:]' '[:upper:]')
 
-  if [ "$git_provider_val" == "GITLAB" ] || [ "$git_provider_val" == "GITHUB" ] || [ "$git_provider_val" == "BITBUCKET" ]; then
+  if [ "$git_provider_val" == "GITLAB" ] || [ "$git_provider_val" == "GITHUB" ] || [ "$git_provider_val" == "BITBUCKET" ] || [ "$git_provider_val" == "BITBUCKET-ENTERPRISE" ]; then
     echo $git_provider_val
   else
-    echo "Invalid git provider value. Please enter either GITLAB or GITHUB or BITBUCKET."
+    echo "Invalid git provider value. Please enter either GITLAB or GITHUB or BITBUCKET or BITBUCKET-ENTERPRISE."
     exit 1
   fi
 }
@@ -463,10 +463,10 @@ optional_params_cli=(
 required_params_server=(
   "mode"
   "code_feedback"
+  "git.provider"
 )
 
 optional_params_server=(
-  "git.provider"
   "git.access_token"
   "bito_cli.bito.access_key"
   "acceptable_suggestions_enabled"
@@ -720,16 +720,21 @@ encrypt_git_secret() {
 
 param_bito_access_key="bito_cli.bito.access_key"
 param_git_access_token="git.access_token"
+param_git_provider="git.provider"
 
 docker_enc_params=
 if [ "$mode" == "server" ]; then
     if [ -n "${props[$param_bito_access_key]}" ] && [ -n "${props[$param_git_access_token]}" ]; then
-        git_secret="${props[$param_bito_access_key]}@#~^${props[$param_git_access_token]}"
+        if [[ "${props[$param_git_provider]}" == "BITBUCKET" || "${props[$param_git_provider]}" == "BITBUCKET-ENTERPRISE" ]]; then
+          git_secret="${props[$param_git_access_token]}"
+        else
+          git_secret="${props[$param_bito_access_key]}@#~^${props[$param_git_access_token]}"
+        fi
         encryption_key=$(openssl rand -base64 32)
         git_secret=$(encrypt_git_secret "$encryption_key" "$git_secret")
         docker_enc_params=" --git.secret=$git_secret --encryption_key=$encryption_key"
         
-        echo "Use below as Gitlab and Github Webhook secret:"
+        echo "Use below as Gitlab and Github or Bitbucket Webhook secret:"
         echo "$git_secret"
         echo
     fi
