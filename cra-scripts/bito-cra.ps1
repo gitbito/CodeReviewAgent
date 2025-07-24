@@ -49,8 +49,8 @@ function Validate-GitProvider {
     $git_provider_val = $git_provider_val.ToUpper()
 
     # Check if the converted value is either "GITLAB" or "GITHUB" or "BITBUCKET"
-    if ($git_provider_val -ne "GITLAB" -and $git_provider_val -ne "GITHUB" -and $git_provider_val -ne "BITBUCKET") {
-        Write-Host "Invalid git provider value. Please enter either GITLAB or GITHUB or BITBUCKET."
+    if ($git_provider_val -ne "GITLAB" -and $git_provider_val -ne "GITHUB" -and $git_provider_val -ne "BITBUCKET" and $git_provider_val -ne "BITBUCKET-ENTERPRISE") {
+        Write-Host "Invalid git provider value. Please enter either GITLAB or GITHUB or BITBUCKET or BITBUCKET-ENTERPRISE."
         exit 1
     }
 
@@ -698,13 +698,17 @@ $docker_enc_params=
 
 if ($mode -eq "server") {
     if (-not([string]::IsNullOrEmpty($props[$param_bito_access_key])) -and -not([string]::IsNullOrEmpty($props[$param_git_access_token]))) {
-        $git_secret = "$($props[$param_bito_access_key])@#~^$($props[$param_git_access_token])"
+        if ($props[$param_git_provider] -eq "BITBUCKET" -or $props[$param_git_provider] -eq "BITBUCKET-ENTERPRISE") {
+            $git_secret = $props[$param_git_access_token]
+        } else {
+            $git_secret = "$($props[$param_bito_access_key])@#~^$($props[$param_git_access_token])"
+        }
         $encryption_key = [System.Convert]::ToBase64String((1..32 | ForEach-Object { [byte](Get-Random -Minimum 0 -Maximum 256) }))
         $git_secret_encrypted = Encrypt-GitSecret -key $encryption_key -plaintext $git_secret
         $docker_enc_params=" --git.secret=$git_secret_encrypted --encryption_key=$encryption_key"
         $docker_cmd += " ${docker_enc_params}"
         
-        Write-Host "Use below as Gitlab and Github Webhook secret:"
+        Write-Host "Use below as Gitlab and Github or Bitbucket Webhook secret:"
         Write-Host $git_secret_encrypted
         Write-Host
     }
