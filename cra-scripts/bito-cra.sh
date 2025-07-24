@@ -459,14 +459,14 @@ optional_params_cli=(
   "support_email"
 )
 
-# Parameters that are required/optional in mode server
+# Parameters that are required/optional in the mode server
 required_params_server=(
   "mode"
   "code_feedback"
-  "git.provider"
 )
 
 optional_params_server=(
+  "git.provider"
   "git.access_token"
   "bito_cli.bito.access_key"
   "acceptable_suggestions_enabled"
