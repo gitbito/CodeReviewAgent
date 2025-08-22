@@ -73,7 +73,7 @@
 
 > _Click the image below to watch the demo video on YouTube._
 
-[![Bito's AI Code Review Agent](https://img.youtube.com/vi/ZrfSDANgboU/0.jpg)](https://www.youtube.com/watch?v=ZrfSDANgboU)
+[![See Bito's AI Code Review work](https://i.imgur.com/iUFnfuK.png)](https://youtu.be/WukH9rA_5go "See Bito's AI Code Review work")
 
 Bito’s **[AI Code Review Agent](https://bito.ai/ai-code-review-agent/)** is the first agent built with **Bito’s AI Agent framework and engine**. It is an automated AI assistant (powered by Anthropic’s Claude Sonnet 3.5) that will review your team’s code; it spots bugs, issues, code smells, and security vulnerabilities in Pull/Merge Requests (PR/MR) and provides high-quality suggestions to fix them.
 
