@@ -698,13 +698,21 @@ $docker_enc_params=
 
 if ($mode -eq "server") {
     if (-not([string]::IsNullOrEmpty($props[$param_bito_access_key])) -and -not([string]::IsNullOrEmpty($props[$param_git_access_token]))) {
-        $git_secret = "$($props[$param_bito_access_key])@#~^$($props[$param_git_access_token])"
+        if ($props[$param_git_provider] -eq "BITBUCKET") {
+            $git_secret = $props[$param_git_access_token]
+            # Truncate if longer than 60 characters
+            if ($git_secret.Length -gt 60) {
+                $git_secret = $git_secret.Substring(0, 60)
+            }
+        } else {
+            $git_secret = "$($props[$param_bito_access_key])@#~^$($props[$param_git_access_token])"
+        }
         $encryption_key = [System.Convert]::ToBase64String((1..32 | ForEach-Object { [byte](Get-Random -Minimum 0 -Maximum 256) }))
         $git_secret_encrypted = Encrypt-GitSecret -key $encryption_key -plaintext $git_secret
         $docker_enc_params=" --git.secret=$git_secret_encrypted --encryption_key=$encryption_key"
         $docker_cmd += " ${docker_enc_params}"
         
-        Write-Host "Use below as Gitlab and Github Webhook secret:"
+        Write-Host "Use below as Gitlab and Github or Bitbucket Webhook secret:"
         Write-Host $git_secret_encrypted
         Write-Host
     }

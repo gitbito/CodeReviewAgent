@@ -459,7 +459,7 @@ optional_params_cli=(
   "support_email"
 )
 
-# Parameters that are required/optional in mode server
+# Parameters that are required/optional in the mode server
 required_params_server=(
   "mode"
   "code_feedback"
@@ -720,16 +720,25 @@ encrypt_git_secret() {
 
 param_bito_access_key="bito_cli.bito.access_key"
 param_git_access_token="git.access_token"
+param_git_provider="git.provider"
 
 docker_enc_params=
 if [ "$mode" == "server" ]; then
     if [ -n "${props[$param_bito_access_key]}" ] && [ -n "${props[$param_git_access_token]}" ]; then
-        git_secret="${props[$param_bito_access_key]}@#~^${props[$param_git_access_token]}"
+        if [[ "${props[$param_git_provider]}" == "BITBUCKET" ]]; then
+          git_secret="${props[$param_git_access_token]}"
+		  # Truncate only for Bitbucket if longer than 60 characters
+          if [ ${#git_secret} -gt 60 ]; then
+            git_secret="${git_secret:0:60}"
+          fi
+        else
+          git_secret="${props[$param_bito_access_key]}@#~^${props[$param_git_access_token]}"
+        fi
         encryption_key=$(openssl rand -base64 32)
         git_secret=$(encrypt_git_secret "$encryption_key" "$git_secret")
         docker_enc_params=" --git.secret=$git_secret --encryption_key=$encryption_key"
         
-        echo "Use below as Gitlab and Github Webhook secret:"
+        echo "Use below as Gitlab and Github or Bitbucket Webhook secret:"
         echo "$git_secret"
         echo
     fi
