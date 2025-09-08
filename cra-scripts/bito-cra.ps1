@@ -700,6 +700,10 @@ if ($mode -eq "server") {
     if (-not([string]::IsNullOrEmpty($props[$param_bito_access_key])) -and -not([string]::IsNullOrEmpty($props[$param_git_access_token]))) {
         if ($props[$param_git_provider] -eq "BITBUCKET") {
             $git_secret = $props[$param_git_access_token]
+            # Truncate if longer than 60 characters
+            if ($git_secret.Length -gt 60) {
+                $git_secret = $git_secret.Substring(0, 60)
+            }
         } else {
             $git_secret = "$($props[$param_bito_access_key])@#~^$($props[$param_git_access_token])"
         }
