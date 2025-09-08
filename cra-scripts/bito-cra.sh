@@ -727,6 +727,10 @@ if [ "$mode" == "server" ]; then
     if [ -n "${props[$param_bito_access_key]}" ] && [ -n "${props[$param_git_access_token]}" ]; then
         if [[ "${props[$param_git_provider]}" == "BITBUCKET" ]]; then
           git_secret="${props[$param_git_access_token]}"
+		  # Truncate only for Bitbucket if longer than 60 characters
+          if [ ${#git_secret} -gt 60 ]; then
+            git_secret="${git_secret:0:60}"
+          fi
         else
           git_secret="${props[$param_bito_access_key]}@#~^${props[$param_git_access_token]}"
         fi
