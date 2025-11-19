@@ -1,21 +1,4 @@
-<!-- PROJECT SHIELDS -->
-<!--
-*** I'm using markdown "reference style" links for readability.
-*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-*** See the bottom of this document for the declaration of the reference variables
-*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-*** https://www.markdownguide.org/basic-syntax/#reference-style-links
--->
-
-[![Visit bito.ai][bito-shield]][bito-url]
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
-
-<!-- PROJECT LOGO -->
-<br />
+ />
 <div align="center">
   <a href="https://bito.ai/product/ai-code-review-agent/">
     <img src="https://github.com/user-attachments/assets/d06b4dcf-9234-4d9a-be65-1e6f1ecfe5fa" alt="Logo" width="150">
